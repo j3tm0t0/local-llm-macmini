@@ -6,10 +6,12 @@
 # ]
 # ///
 """
-T2-T5 cumulative time comparison chart.
+T2-T5 cumulative time comparison charts.
 
 Run: ./scripts/generate_chart.py
-Outputs: docs/assets/model-comparison.png
+Outputs:
+  - docs/assets/model-comparison.png   (main backend comparison)
+  - docs/assets/cooling-impact.png     (warm vs active-cooled, same models)
 """
 from __future__ import annotations
 
@@ -126,4 +128,65 @@ plt.tight_layout()
 OUT = Path(__file__).resolve().parent.parent / "docs" / "assets" / "model-comparison.png"
 OUT.parent.mkdir(parents=True, exist_ok=True)
 plt.savefig(OUT, dpi=180, bbox_inches="tight")
+plt.close(fig)
 print(f"Wrote {OUT.relative_to(Path(__file__).resolve().parent.parent)}")
+
+
+# ============================================================
+# Second chart: warm vs active-cooled, same 5 configurations
+# ============================================================
+
+@dataclass
+class CoolingPair:
+    label: str
+    warm: int
+    cooled: int
+    note: str = ""
+
+# Data pulled from REPORT.md §11 / BLOG.md cooling section.
+COOLING: list[CoolingPair] = [
+    CoolingPair("Ollama qwen3.6:35b-a3b-coding-nvfp4",       333, 308, "-7.5%"),
+    CoolingPair("Ollama qwen3.6:35b-a3b-coding-mxfp8",       366, 341, "-7%"),
+    CoolingPair("Ollama gpt-oss:20b",                        662, 562, "-15%"),
+    CoolingPair("MLX vllm-mlx + Qwen3-Coder-30B-A3B-DWQ",   1356, 792, "-42% (T5 完走)"),
+    CoolingPair("MLX robustonian + Qwen3-Coder-30B-A3B-DWQ", 1106, 1157, "+5% (逆効果)"),
+]
+# Sort by warm time ascending so eye reads small→large left-to-right.
+COOLING.sort(key=lambda p: p.warm)
+
+fig2, ax2 = plt.subplots(figsize=(11, 5.5))
+
+n = len(COOLING)
+y = list(range(n))[::-1]  # top is fastest warm
+bar_h = 0.36
+
+warm_vals = [p.warm for p in COOLING]
+cool_vals = [p.cooled for p in COOLING]
+
+ax2.barh([yi + bar_h/2 for yi in y], warm_vals, height=bar_h,
+         color="#94a3b8", edgecolor="black", linewidth=0.4, label="昨日 (no fan)")
+ax2.barh([yi - bar_h/2 for yi in y], cool_vals, height=bar_h,
+         color="#22d3ee", edgecolor="black", linewidth=0.4, label="冷却 (active fan)")
+
+ax2.set_yticks(y)
+ax2.set_yticklabels([p.label for p in COOLING], fontsize=9)
+ax2.set_xlabel("T2-T5 累計時間 (秒) — 短いほど良い")
+ax2.set_title("冷却ファン投入による thermal throttling の影響", fontsize=12, pad=15)
+
+for yi, p in zip(y, COOLING):
+    ax2.text(p.warm + 14, yi + bar_h/2, f"{p.warm}s", va="center", fontsize=8.5, color="#aaa")
+    color = "#22d3ee" if p.cooled < p.warm else "#f472b6"
+    ax2.text(p.cooled + 14, yi - bar_h/2, f"{p.cooled}s ({p.note})", va="center", fontsize=8.5, color=color)
+
+ax2.set_xlim(0, max(max(warm_vals), max(cool_vals)) * 1.32)
+ax2.grid(axis="x", linestyle=":", alpha=0.4)
+ax2.spines["top"].set_visible(False)
+ax2.spines["right"].set_visible(False)
+ax2.legend(loc="lower right", fontsize=9, framealpha=0.95)
+
+plt.tight_layout()
+
+OUT2 = Path(__file__).resolve().parent.parent / "docs" / "assets" / "cooling-impact.png"
+plt.savefig(OUT2, dpi=180, bbox_inches="tight")
+plt.close(fig2)
+print(f"Wrote {OUT2.relative_to(Path(__file__).resolve().parent.parent)}")
