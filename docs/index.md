@@ -35,7 +35,7 @@ Ollama 版と MLX (vllm-mlx / robustonian-mlx-lm) 版を **同一テストスイ
 - **MLX は今のところ Ollama より遅い**: 同等量子化の `unsloth/Qwen3.6-35B-A3B-UD-MLX-4bit` (20GB) で 9m45s。Apple Silicon ネイティブ MLX への素朴な期待 (Ollama より速いはず) は今回の vllm-mlx 0.2.9 構成では裏切られた。
 - **Tool 互換性はサーバ × モデルの組み合わせ次第**: Qwen3-Coder 30B は **Ollama では失敗・MLX では救済**、gpt-oss 20b は **Ollama で動作・MLX で空走** と逆転する。
 - **新たな地雷タイプ「やる気だけモデル」**: Ollama の `qwen3:30b-instruct` と MLX の `gpt-oss-20b-MXFP4-Q4` は、tool block を一切発火せず自然文で「完了」を宣言する。ベンチ数字だけ見ると最速に見えるが artifact ゼロ。**`ls` で確認しないと騙される**。
-- **参考: Anthropic 標準モデル**: 同じテストを Claude Code + クラウド版 **Opus 4.7 で 90s / Sonnet 4.6 で 80s** で完走。Sonnet 4.6 比でローカル最良 (Ollama nvfp4) は 4.2x、MLX 最良は 7.3x 遅い。詳細は [参考ページ](reference.md)。
+- **参考: Anthropic 標準モデル**: 同じテストを Claude Code + クラウド版 **Opus 4.7 で 90s / Sonnet 4.6 で 80s** で完走。Sonnet 4.6 比でローカル最良 (Ollama nvfp4) は 4.2x、MLX 最良は 7.3x 遅い。詳細は本ページ末尾の[クラウド版セクション](#クラウド版-opus-47--sonnet-46-の詳細)。
 
 ---
 
@@ -185,13 +185,67 @@ launchctl setenv OLLAMA_CONTEXT_LENGTH 131072
 
 ---
 
-## ページ一覧
+## クラウド版 (Opus 4.7 / Sonnet 4.6) の詳細
 
-| ページ | 内容 |
+ローカル LLM の速度感を「現実的なベースライン」と比較するため、**同一テストスイート T2-T5・同一マシン (Mac mini M4 Pro)・同一 tmux send-keys 駆動**で Anthropic クラウド版を計測した。
+
+### 計測条件
+
+- ペイン: 検証セッションの直下に `tmux split-window -v` で作成
+- 環境変数: `ANTHROPIC_BASE_URL` / `ANTHROPIC_AUTH_TOKEN` / `ANTHROPIC_API_KEY` をすべて unset → Claude Max の標準認証
+- 起動: `claude --model claude-opus-4-7 --permission-mode bypassPermissions` / `claude --model claude-sonnet-4-6 --permission-mode bypassPermissions`
+- Runner: `mlx/tests/run_practical.sh` をそのまま流用 (cooldown は API なので 5s に短縮)
+- ログ: [reference/results/](https://github.com/j3tm0t0/local-llm-macmini/tree/main/reference/results) 配下に保管
+
+### タスク別タイミング
+
+| タスク | Opus 4.7 | Sonnet 4.6 |
+|---|---|---|
+| T2 バグ修正 (`factorial(0)` を `1` に修正) | 16s (Sautéed for 13s) | 16s (Cooked for 14s) |
+| T3 マルチファイル package (`calc/` + test) | 27s (Churned for 20s) | 21s (Crunched for 18s) |
+| T4 リファクタ (3 関数の重複除去 + 動作確認) | 26s (Sautéed for 24s) | 27s (Cogitated for 21s) |
+| T5 CLI + エラーハンドリング (`wc_tool.py`) | 21s (Churned for 16s) | 16s (Cooked for 13s) |
+| **累計** | **1m30s (90s)** | **1m20s (80s)** |
+| 全 artifact 検証 | ✅ | ✅ |
+
+### 観察
+
+- **Opus 4.7 と Sonnet 4.6 は今回の T2-T5 では誤差レベルの差**。Sonnet がわずかに速いのは生成トークンが軽快なため。これくらいの粒度の素直なコーディングタスクでは差が出にくい。
+- **クラウド版は「やる気だけ問題」を起こさない**。tool block を確実に発火し、artifact が決定論的に作られる。ローカル LLM 検証で発見した `qwen3:30b-instruct` / `gpt-oss-20b-MXFP4-Q4` 系の空走は Anthropic クラウドでは観測されず、これは商用モデルの基本品質として期待できる。
+
+### 再現方法
+
+```bash
+# 1. ベンチ用ディレクトリ
+mkdir -p ~/tmp/cc-reference-bench/{tests,scripts,results}
+cp mlx/tests/run_practical.sh        ~/tmp/cc-reference-bench/tests/
+cp mlx/scripts/reset_fixtures.sh     ~/tmp/cc-reference-bench/scripts/
+~/tmp/cc-reference-bench/scripts/reset_fixtures.sh
+
+# 2. tmux で下に pane を作って Claude Code (Anthropic 認証) 起動
+tmux split-window -v -c ~/tmp/cc-reference-bench
+# 新 pane で:
+unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN ANTHROPIC_API_KEY
+claude --model claude-opus-4-7 --permission-mode bypassPermissions
+
+# 3. 元 pane から runner を起動 (PANE は新 pane の番号)
+cd ~/tmp/cc-reference-bench
+COOLDOWN=5 ./tests/run_practical.sh claude-opus-4-7 0:4.1
+
+# 4. Sonnet も同様に
+~/tmp/cc-reference-bench/scripts/reset_fixtures.sh
+# 新 pane で `/quit` → claude --model claude-sonnet-4-6 --permission-mode bypassPermissions
+COOLDOWN=5 ./tests/run_practical.sh claude-sonnet-4-6 0:4.1
+```
+
+### 計測ログ (raw)
+
+| ファイル | 内容 |
 |---|---|
-| [参考: クラウド版 Opus 4.7 / Sonnet 4.6](reference.md) | 速度上限ベースライン・再現コマンド・raw ログへのリンク |
-
-> 詳細レポート / ブログ調記事は当面公開停止中です (書き直し予定)。本ページの統合サマリーで主要な数字・推奨は確認できます。
+| [`runner_claude-opus-4-7.log`](https://github.com/j3tm0t0/local-llm-macmini/blob/main/reference/results/runner_claude-opus-4-7.log) | Opus 4.7 のタイミングサマリ (1.4 KB) |
+| [`runner_claude-sonnet-4-6.log`](https://github.com/j3tm0t0/local-llm-macmini/blob/main/reference/results/runner_claude-sonnet-4-6.log) | Sonnet 4.6 のタイミングサマリ (1.4 KB) |
+| [`practical_claude-opus-4-7.log`](https://github.com/j3tm0t0/local-llm-macmini/blob/main/reference/results/practical_claude-opus-4-7.log) | Opus 4.7 のフル tmux キャプチャ (33 KB) |
+| [`practical_claude-sonnet-4-6.log`](https://github.com/j3tm0t0/local-llm-macmini/blob/main/reference/results/practical_claude-sonnet-4-6.log) | Sonnet 4.6 のフル tmux キャプチャ (55 KB) |
 
 ---
 
