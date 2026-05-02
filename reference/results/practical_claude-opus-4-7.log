@@ -1,0 +1,567 @@
+=== Practical test for claude-opus-4-7 ===
+Start: 2026年 5月 3日 日曜日 01時43分54秒 JST
+
+--- T2_bugfix ---
+Prompt: Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+Elapsed: 16s
+Timing: ✻ Sautéed for 13s
+
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN ANTHROPIC_API_KEY
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ claude --model claude-opus-4-7 --permission-mode bypassPermissions
+╭─── Claude Code v2.1.126 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                                                               │
+│                 Welcome back moto!                 │ Run /init to create a CLAUDE.md file with instructions for Claude                                      │
+│                                                    │ ────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                                                             │
+│                      ▝▜█████▛▘                     │ The `/model` picker now lists models from your gateway's `/v1/models` endpoint when `ANTHROPIC_BASE_U… │
+│                        ▘▘ ▝▝                       │ - Added `claude project purge [path]` to delete all Claude Code state for a project (transcripts, tas… │
+│    Opus 4.7 · Claude Max · j3tm0t0@gmail.com's     │ `--dangerously-skip-permissions` now bypasses prompts for writes to `.claude/`, `.git/`, `.vscode/`, … │
+│    Organization                                    │ /release-notes for more                                                                                │
+│              ~/tmp/cc-reference-bench              │                                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ バグは factorial の基底ケースで、n == 0 のとき 0 を返しているため全体が 0 になる点です（正しくは 1）。修正して実行します。
+
+⏺ Update(tests/T2_buggy.py)
+  ⎿  Added 1 line, removed 1 line
+      1  def factorial(n):
+      2      if n == 0:
+      3 -        return 0
+      3 +        return 1
+      4      return n * factorial(n - 1)
+      5
+      6
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T2_buggy.py)
+  ⎿  factorial(5) = 120
+     factorial(0) = 1
+     fibonacci(7) = 13
+
+⏺ バグ: factorial の基底ケースが return 0 になっており、再帰の積が常に 0 になっていました。return 1 に修正。
+
+  修正後の出力:
+  factorial(5) = 120
+  factorial(0) = 1
+  fibonacci(7) = 13
+
+✻ Sautéed for 13s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    6%    ]⏰4h45m | 7d[    1%    ]⏰6d16h | Opus 4.7(20.0k/1.0M)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+---
+[cooldown 5s]
+
+--- T3_multifile ---
+Prompt: Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py that imports from calc and runs 3 assertions. Run the test and show results.
+Elapsed: 27s
+Timing: ✻ Churned for 20s
+
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN ANTHROPIC_API_KEY
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ claude --model claude-opus-4-7 --permission-mode bypassPermissions
+╭─── Claude Code v2.1.126 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                                                               │
+│                 Welcome back moto!                 │ Run /init to create a CLAUDE.md file with instructions for Claude                                      │
+│                                                    │ ────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                                                             │
+│                      ▝▜█████▛▘                     │ The `/model` picker now lists models from your gateway's `/v1/models` endpoint when `ANTHROPIC_BASE_U… │
+│                        ▘▘ ▝▝                       │ - Added `claude project purge [path]` to delete all Claude Code state for a project (transcripts, tas… │
+│    Opus 4.7 · Claude Max · j3tm0t0@gmail.com's     │ `--dangerously-skip-permissions` now bypasses prompts for writes to `.claude/`, `.git/`, `.vscode/`, … │
+│    Organization                                    │ /release-notes for more                                                                                │
+│              ~/tmp/cc-reference-bench              │                                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ バグは factorial の基底ケースで、n == 0 のとき 0 を返しているため全体が 0 になる点です（正しくは 1）。修正して実行します。
+
+⏺ Update(tests/T2_buggy.py)
+  ⎿  Added 1 line, removed 1 line
+      1  def factorial(n):
+      2      if n == 0:
+      3 -        return 0
+      3 +        return 1
+      4      return n * factorial(n - 1)
+      5
+      6
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T2_buggy.py)
+  ⎿  factorial(5) = 120
+     factorial(0) = 1
+     fibonacci(7) = 13
+
+⏺ バグ: factorial の基底ケースが return 0 になっており、再帰の積が常に 0 になっていました。return 1 に修正。
+
+  修正後の出力:
+  factorial(5) = 120
+  factorial(0) = 1
+  fibonacci(7) = 13
+
+✻ Sautéed for 13s
+
+❯ Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py
+   that imports from calc and runs 3 assertions. Run the test and show results.
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(mkdir -p /Users/moto/tmp/cc-reference-bench/calc)
+  ⎿  Done
+
+⏺ Write(calc/ops.py)
+  ⎿  Wrote 6 lines to calc/ops.py
+      1 def add(a, b):
+      2     return a + b
+      3
+      4
+      5 def multiply(a, b):
+      6     return a * b
+
+⏺ Write(calc/__init__.py)
+  ⎿  Wrote 3 lines to calc/__init__.py
+      1 from .ops import add, multiply
+      2
+      3 __all__ = ["add", "multiply"]
+
+⏺ Write(test_calc.py)
+  ⎿  Wrote 7 lines to test_calc.py
+      1 from calc import add, multiply
+      2
+      3 assert add(2, 3) == 5
+      4 assert multiply(4, 5) == 20
+      5 assert add(-1, 1) == 0
+      6
+      7 print("All 3 assertions passed.")
+
+⏺ Bash(python3 test_calc.py)
+  ⎿  All 3 assertions passed.
+
+⏺ 作成した構成:
+  - calc/ops.py: add と multiply の実装
+  - calc/__init__.py: add, multiply を再エクスポート
+  - test_calc.py: 3 つの assertion (add(2,3)==5, multiply(4,5)==20, add(-1,1)==0)
+
+  実行結果:
+  All 3 assertions passed.
+
+✻ Churned for 20s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    7%    ]⏰4h45m | 7d[    1%    ]⏰6d16h | Opus 4.7(30.0k/1.0M)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+---
+[cooldown 5s]
+
+--- T4_refactor ---
+Prompt: Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to verify output matches.
+Elapsed: 26s
+Timing: ✻ Sautéed for 24s
+
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN ANTHROPIC_API_KEY
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ claude --model claude-opus-4-7 --permission-mode bypassPermissions
+╭─── Claude Code v2.1.126 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                                                               │
+│                 Welcome back moto!                 │ Run /init to create a CLAUDE.md file with instructions for Claude                                      │
+│                                                    │ ────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                                                             │
+│                      ▝▜█████▛▘                     │ The `/model` picker now lists models from your gateway's `/v1/models` endpoint when `ANTHROPIC_BASE_U… │
+│                        ▘▘ ▝▝                       │ - Added `claude project purge [path]` to delete all Claude Code state for a project (transcripts, tas… │
+│    Opus 4.7 · Claude Max · j3tm0t0@gmail.com's     │ `--dangerously-skip-permissions` now bypasses prompts for writes to `.claude/`, `.git/`, `.vscode/`, … │
+│    Organization                                    │ /release-notes for more                                                                                │
+│              ~/tmp/cc-reference-bench              │                                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ バグは factorial の基底ケースで、n == 0 のとき 0 を返しているため全体が 0 になる点です（正しくは 1）。修正して実行します。
+
+⏺ Update(tests/T2_buggy.py)
+  ⎿  Added 1 line, removed 1 line
+      1  def factorial(n):
+      2      if n == 0:
+      3 -        return 0
+      3 +        return 1
+      4      return n * factorial(n - 1)
+      5
+      6
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T2_buggy.py)
+  ⎿  factorial(5) = 120
+     factorial(0) = 1
+     fibonacci(7) = 13
+
+⏺ バグ: factorial の基底ケースが return 0 になっており、再帰の積が常に 0 になっていました。return 1 に修正。
+
+  修正後の出力:
+  factorial(5) = 120
+  factorial(0) = 1
+  fibonacci(7) = 13
+
+✻ Sautéed for 13s
+
+❯ Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py
+   that imports from calc and runs 3 assertions. Run the test and show results.
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(mkdir -p /Users/moto/tmp/cc-reference-bench/calc)
+  ⎿  Done
+
+⏺ Write(calc/ops.py)
+  ⎿  Wrote 6 lines to calc/ops.py
+      1 def add(a, b):
+      2     return a + b
+      3
+      4
+      5 def multiply(a, b):
+      6     return a * b
+
+⏺ Write(calc/__init__.py)
+  ⎿  Wrote 3 lines to calc/__init__.py
+      1 from .ops import add, multiply
+      2
+      3 __all__ = ["add", "multiply"]
+
+⏺ Write(test_calc.py)
+  ⎿  Wrote 7 lines to test_calc.py
+      1 from calc import add, multiply
+      2
+      3 assert add(2, 3) == 5
+      4 assert multiply(4, 5) == 20
+      5 assert add(-1, 1) == 0
+      6
+      7 print("All 3 assertions passed.")
+
+⏺ Bash(python3 test_calc.py)
+  ⎿  All 3 assertions passed.
+
+⏺ 作成した構成:
+  - calc/ops.py: add と multiply の実装
+  - calc/__init__.py: add, multiply を再エクスポート
+  - test_calc.py: 3 つの assertion (add(2,3)==5, multiply(4,5)==20, add(-1,1)==0)
+
+  実行結果:
+  All 3 assertions passed.
+
+✻ Churned for 20s
+
+❯ Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to
+  verify output matches.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T4_messy.py > /tmp/T4_original.out && cat /tmp/T4_original.out)
+  ⎿  Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     Admins: [{'display': 'Charlie <charlie@example.com>', 'type': 'admin'}]
+     Guests: [{'display': 'Dave <dave@example.com>', 'type': 'guest'}]
+
+⏺ 3 つの関数の差分は type フィールドのみ。共通ロジックを抽出してリファクタします（process_users は元のまま type: "active" を返す挙動を維持）。
+
+⏺ Write(tests/T4_messy.py)
+  ⎿  Added 16 lines, removed 22 lines
+       1 -"""Messy code that needs refactoring."""
+       1 +"""Refactored: shared logic extracted, behavior preserved."""
+       2
+       3 +
+       4 +def _format_active(records, type_label):
+       5 +    return [
+       6 +        {
+       7 +            "display": f"{r.get('name', 'Unknown')} <{r.get('email', 'no-email')}>",
+       8 +            "type": type_label,
+       9 +        }
+      10 +        for r in records
+      11 +        if r.get("active")
+      12 +    ]
+      13 +
+      14 +
+      15  def process_users(users):
+       4 -    result = []
+       5 -    for u in users:
+       6 -        if u.get("active"):
+       7 -            name = u.get("name", "Unknown")
+       8 -            email = u.get("email", "no-email")
+       9 -            result.append({"display": f"{name} <{email}>", "type": "active"})
+      10 -    return result
+      16 +    return _format_active(users, "active")
+      17
+      18
+      19  def process_admins(admins):
+      14 -    result = []
+      15 -    for a in admins:
+      16 -        if a.get("active"):
+      17 -            name = a.get("name", "Unknown")
+      18 -            email = a.get("email", "no-email")
+      19 -            result.append({"display": f"{name} <{email}>", "type": "admin"})
+      20 -    return result
+      20 +    return _format_active(admins, "admin")
+      21
+      22
+      23  def process_guests(guests):
+      24 -    result = []
+      25 -    for g in guests:
+      26 -        if g.get("active"):
+      27 -            name = g.get("name", "Unknown")
+      28 -            email = g.get("email", "no-email")
+      29 -            result.append({"display": f"{name} <{email}>", "type": "guest"})
+      30 -    return result
+      24 +    return _format_active(guests, "guest")
+      25
+      26
+      27  if __name__ == "__main__":
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T4_messy.py > /tmp/T4_refactored.out && diff /tmp/T4_original.out /tmp/T4_refactored.out && echo
+      "MATCH: output…)
+  ⎿  MATCH: outputs are identical
+     --- Refactored output ---
+     Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     … +2 lines (ctrl+o to expand)
+
+⏺ リファクタ内容:
+  - 3 つの process_* 関数の共通処理を _format_active(records, type_label) に抽出
+  - ループ + if + dict 構築をリスト内包表記に変換
+  - 公開 API（process_users / process_admins / process_guests）はそのまま維持
+  - process_users の type: "active" という既存挙動も保持
+
+  検証: diff で元の出力と完全一致を確認 (MATCH: outputs are identical)。
+
+✻ Sautéed for 24s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    7%    ]⏰4h44m | 7d[    1%    ]⏰6d16h | Opus 4.7(30.0k/1.0M)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+---
+[cooldown 5s]
+
+--- T5_cli ---
+Prompt: Create a CLI tool wc_tool.py that takes a filename argument, prints line/word/char counts like the wc command. Handle the case where the file does not exist with a friendly error message. Test it on tests/T2_buggy.py and on a nonexistent file called nope.txt.
+Elapsed: 21s
+Timing: ✻ Churned for 16s
+
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ unset ANTHROPIC_BASE_URL ANTHROPIC_AUTH_TOKEN ANTHROPIC_API_KEY
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ claude --model claude-opus-4-7 --permission-mode bypassPermissions
+╭─── Claude Code v2.1.126 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                                                               │
+│                 Welcome back moto!                 │ Run /init to create a CLAUDE.md file with instructions for Claude                                      │
+│                                                    │ ────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                                                             │
+│                      ▝▜█████▛▘                     │ The `/model` picker now lists models from your gateway's `/v1/models` endpoint when `ANTHROPIC_BASE_U… │
+│                        ▘▘ ▝▝                       │ - Added `claude project purge [path]` to delete all Claude Code state for a project (transcripts, tas… │
+│    Opus 4.7 · Claude Max · j3tm0t0@gmail.com's     │ `--dangerously-skip-permissions` now bypasses prompts for writes to `.claude/`, `.git/`, `.vscode/`, … │
+│    Organization                                    │ /release-notes for more                                                                                │
+│              ~/tmp/cc-reference-bench              │                                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ バグは factorial の基底ケースで、n == 0 のとき 0 を返しているため全体が 0 になる点です（正しくは 1）。修正して実行します。
+
+⏺ Update(tests/T2_buggy.py)
+  ⎿  Added 1 line, removed 1 line
+      1  def factorial(n):
+      2      if n == 0:
+      3 -        return 0
+      3 +        return 1
+      4      return n * factorial(n - 1)
+      5
+      6
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T2_buggy.py)
+  ⎿  factorial(5) = 120
+     factorial(0) = 1
+     fibonacci(7) = 13
+
+⏺ バグ: factorial の基底ケースが return 0 になっており、再帰の積が常に 0 になっていました。return 1 に修正。
+
+  修正後の出力:
+  factorial(5) = 120
+  factorial(0) = 1
+  fibonacci(7) = 13
+
+✻ Sautéed for 13s
+
+❯ Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py
+   that imports from calc and runs 3 assertions. Run the test and show results.
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(mkdir -p /Users/moto/tmp/cc-reference-bench/calc)
+  ⎿  Done
+
+⏺ Write(calc/ops.py)
+  ⎿  Wrote 6 lines to calc/ops.py
+      1 def add(a, b):
+      2     return a + b
+      3
+      4
+      5 def multiply(a, b):
+      6     return a * b
+
+⏺ Write(calc/__init__.py)
+  ⎿  Wrote 3 lines to calc/__init__.py
+      1 from .ops import add, multiply
+      2
+      3 __all__ = ["add", "multiply"]
+
+⏺ Write(test_calc.py)
+  ⎿  Wrote 7 lines to test_calc.py
+      1 from calc import add, multiply
+      2
+      3 assert add(2, 3) == 5
+      4 assert multiply(4, 5) == 20
+      5 assert add(-1, 1) == 0
+      6
+      7 print("All 3 assertions passed.")
+
+⏺ Bash(python3 test_calc.py)
+  ⎿  All 3 assertions passed.
+
+⏺ 作成した構成:
+  - calc/ops.py: add と multiply の実装
+  - calc/__init__.py: add, multiply を再エクスポート
+  - test_calc.py: 3 つの assertion (add(2,3)==5, multiply(4,5)==20, add(-1,1)==0)
+
+  実行結果:
+  All 3 assertions passed.
+
+✻ Churned for 20s
+
+❯ Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to
+  verify output matches.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T4_messy.py > /tmp/T4_original.out && cat /tmp/T4_original.out)
+  ⎿  Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     Admins: [{'display': 'Charlie <charlie@example.com>', 'type': 'admin'}]
+     Guests: [{'display': 'Dave <dave@example.com>', 'type': 'guest'}]
+
+⏺ 3 つの関数の差分は type フィールドのみ。共通ロジックを抽出してリファクタします（process_users は元のまま type: "active" を返す挙動を維持）。
+
+⏺ Write(tests/T4_messy.py)
+  ⎿  Added 16 lines, removed 22 lines
+       1 -"""Messy code that needs refactoring."""
+       1 +"""Refactored: shared logic extracted, behavior preserved."""
+       2
+       3 +
+       4 +def _format_active(records, type_label):
+       5 +    return [
+       6 +        {
+       7 +            "display": f"{r.get('name', 'Unknown')} <{r.get('email', 'no-email')}>",
+       8 +            "type": type_label,
+       9 +        }
+      10 +        for r in records
+      11 +        if r.get("active")
+      12 +    ]
+      13 +
+      14 +
+      15  def process_users(users):
+       4 -    result = []
+       5 -    for u in users:
+       6 -        if u.get("active"):
+       7 -            name = u.get("name", "Unknown")
+       8 -            email = u.get("email", "no-email")
+       9 -            result.append({"display": f"{name} <{email}>", "type": "active"})
+      10 -    return result
+      16 +    return _format_active(users, "active")
+      17
+      18
+      19  def process_admins(admins):
+      14 -    result = []
+      15 -    for a in admins:
+      16 -        if a.get("active"):
+      17 -            name = a.get("name", "Unknown")
+      18 -            email = a.get("email", "no-email")
+      19 -            result.append({"display": f"{name} <{email}>", "type": "admin"})
+      20 -    return result
+      20 +    return _format_active(admins, "admin")
+      21
+      22
+      23  def process_guests(guests):
+      24 -    result = []
+      25 -    for g in guests:
+      26 -        if g.get("active"):
+      27 -            name = g.get("name", "Unknown")
+      28 -            email = g.get("email", "no-email")
+      29 -            result.append({"display": f"{name} <{email}>", "type": "guest"})
+      30 -    return result
+      24 +    return _format_active(guests, "guest")
+      25
+      26
+      27  if __name__ == "__main__":
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T4_messy.py > /tmp/T4_refactored.out && diff /tmp/T4_original.out /tmp/T4_refactored.out && echo
+      "MATCH: output…)
+  ⎿  MATCH: outputs are identical
+     --- Refactored output ---
+     Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     … +2 lines (ctrl+o to expand)
+
+⏺ リファクタ内容:
+  - 3 つの process_* 関数の共通処理を _format_active(records, type_label) に抽出
+  - ループ + if + dict 構築をリスト内包表記に変換
+  - 公開 API（process_users / process_admins / process_guests）はそのまま維持
+  - process_users の type: "active" という既存挙動も保持
+
+  検証: diff で元の出力と完全一致を確認 (MATCH: outputs are identical)。
+
+✻ Sautéed for 24s
+
+❯ Create a CLI tool wc_tool.py that takes a filename argument, prints line/word/char counts like the wc command. Handle the case where the file does not exist
+   with a friendly error message. Test it on tests/T2_buggy.py and on a nonexistent file called nope.txt.
+
+⏺ Write(wc_tool.py)
+  ⎿  Wrote 33 lines to wc_tool.py
+       1 #!/usr/bin/env python3
+       2 """Minimal wc-like tool: prints line, word, and character counts."""
+       3 import sys
+       4 from pathlib import Path
+       5
+       6
+       7 def count(path: Path) -> tuple[int, int, int]:
+       8     text = path.read_text()
+       9     lines = text.splitlines()
+      10     words = text.split()
+     … +23 lines (ctrl+o to expand)
+
+⏺ Bash(echo "=== Test 1: existing file ===" && python3 wc_tool.py tests/T2_buggy.py && echo "" && echo "=== compare with system wc ===" && wc tests/T2_buggy.py
+       && echo…)
+  ⎿  === Test 1: existing file ===
+           16       43      342 tests/T2_buggy.py
+     … +6 lines (ctrl+o to expand)
+
+⏺ 作成完了。wc_tool.py は pathlib でファイルを開き、行数 / 単語数 / 文字数を出力します。
+
+  Test 1: 既存ファイル (tests/T2_buggy.py)
+        16       43      342 tests/T2_buggy.py
+  システムの wc コマンドの結果 (16 43 342) と一致。
+
+  Test 2: 存在しないファイル (nope.txt)
+  Error: file 'nope.txt' does not exist.
+  exit code 1 を返し、トレースバックを出さずに友好的なメッセージを表示。
+
+✻ Churned for 16s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    7%    ]⏰4h44m | 7d[    1%    ]⏰6d16h | Opus 4.7(30.0k/1.0M)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+---
+
+=== All tests done ===
+End: 2026年 5月 3日 日曜日 01時45分39秒 JST

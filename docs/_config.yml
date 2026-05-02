@@ -1,0 +1,29 @@
+title: local-llm-macmini
+description: Mac mini M4 Pro 64GB で Claude Code をローカル LLM で動かす検証
+remote_theme: just-the-docs/just-the-docs
+
+url: https://j3tm0t0.github.io
+baseurl: /local-llm-macmini
+
+permalink: pretty
+
+color_scheme: light
+search_enabled: true
+
+aux_links:
+  "GitHub Repository":
+    - "https://github.com/j3tm0t0/local-llm-macmini"
+aux_links_new_tab: true
+
+heading_anchors: true
+
+footer_content: 'Source: <a href="https://github.com/j3tm0t0/local-llm-macmini">github.com/j3tm0t0/local-llm-macmini</a>'
+
+plugins:
+  - jekyll-remote-theme
+  - jekyll-seo-tag
+
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - vendor

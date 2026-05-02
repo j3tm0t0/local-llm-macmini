@@ -1,0 +1,29 @@
+=== Practical test for claude-sonnet-4-6 ===
+Start: 2026年 5月 3日 日曜日 01時46分10秒 JST
+
+--- T2_bugfix ---
+Prompt: Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+Elapsed: 16s
+Timing: ✻ Cooked for 14s
+[cooldown 5s]
+
+--- T3_multifile ---
+Prompt: Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py that imports from calc and runs 3 assertions. Run the test and show results.
+Elapsed: 21s
+Timing: ✻ Crunched for 18s
+[cooldown 5s]
+
+--- T4_refactor ---
+Prompt: Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to verify output matches.
+Elapsed: 27s
+Timing: ✻ Cogitated for 21s
+[cooldown 5s]
+
+--- T5_cli ---
+Prompt: Create a CLI tool wc_tool.py that takes a filename argument, prints line/word/char counts like the wc command. Handle the case where the file does not exist with a friendly error message. Test it on tests/T2_buggy.py and on a nonexistent file called nope.txt.
+Elapsed: 16s
+Timing: ✻ Cooked for 13s
+
+=== All tests done ===
+End: 2026年 5月 3日 日曜日 01時47分45秒 JST
+Log: /Users/moto/tmp/cc-reference-bench/results/practical_claude-sonnet-4-6.log

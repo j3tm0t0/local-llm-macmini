@@ -1,0 +1,937 @@
+=== Practical test for claude-sonnet-4-6 ===
+Start: 2026年 5月 3日 日曜日 01時46分10秒 JST
+
+--- T2_bugfix ---
+Prompt: Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+Elapsed: 16s
+Timing: ✻ Cooked for 14s
+
+⏺ バグ: factorial の基底ケースが return 0 になっており、再帰の積が常に 0 になっていました。return 1 に修正。
+
+  修正後の出力:
+  factorial(5) = 120
+  factorial(0) = 1
+  fibonacci(7) = 13
+
+✻ Sautéed for 13s
+
+❯ Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py
+   that imports from calc and runs 3 assertions. Run the test and show results.
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Bash(mkdir -p /Users/moto/tmp/cc-reference-bench/calc)
+  ⎿  Done
+
+⏺ Write(calc/ops.py)
+  ⎿  Wrote 6 lines to calc/ops.py
+      1 def add(a, b):
+      2     return a + b
+      3
+      4
+      5 def multiply(a, b):
+      6     return a * b
+
+⏺ Write(calc/__init__.py)
+  ⎿  Wrote 3 lines to calc/__init__.py
+      1 from .ops import add, multiply
+      2
+      3 __all__ = ["add", "multiply"]
+
+⏺ Write(test_calc.py)
+  ⎿  Wrote 7 lines to test_calc.py
+      1 from calc import add, multiply
+      2
+      3 assert add(2, 3) == 5
+      4 assert multiply(4, 5) == 20
+      5 assert add(-1, 1) == 0
+      6
+      7 print("All 3 assertions passed.")
+
+⏺ Bash(python3 test_calc.py)
+  ⎿  All 3 assertions passed.
+
+⏺ 作成した構成:
+  - calc/ops.py: add と multiply の実装
+  - calc/__init__.py: add, multiply を再エクスポート
+  - test_calc.py: 3 つの assertion (add(2,3)==5, multiply(4,5)==20, add(-1,1)==0)
+
+  実行結果:
+  All 3 assertions passed.
+
+✻ Churned for 20s
+
+❯ Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to
+  verify output matches.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T4_messy.py > /tmp/T4_original.out && cat /tmp/T4_original.out)
+  ⎿  Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     Admins: [{'display': 'Charlie <charlie@example.com>', 'type': 'admin'}]
+     Guests: [{'display': 'Dave <dave@example.com>', 'type': 'guest'}]
+
+⏺ 3 つの関数の差分は type フィールドのみ。共通ロジックを抽出してリファクタします（process_users は元のまま type: "active" を返す挙動を維持）。
+
+⏺ Write(tests/T4_messy.py)
+  ⎿  Added 16 lines, removed 22 lines
+       1 -"""Messy code that needs refactoring."""
+       1 +"""Refactored: shared logic extracted, behavior preserved."""
+       2
+       3 +
+       4 +def _format_active(records, type_label):
+       5 +    return [
+       6 +        {
+       7 +            "display": f"{r.get('name', 'Unknown')} <{r.get('email', 'no-email')}>",
+       8 +            "type": type_label,
+       9 +        }
+      10 +        for r in records
+      11 +        if r.get("active")
+      12 +    ]
+      13 +
+      14 +
+      15  def process_users(users):
+       4 -    result = []
+       5 -    for u in users:
+       6 -        if u.get("active"):
+       7 -            name = u.get("name", "Unknown")
+       8 -            email = u.get("email", "no-email")
+       9 -            result.append({"display": f"{name} <{email}>", "type": "active"})
+      10 -    return result
+      16 +    return _format_active(users, "active")
+      17
+      18
+      19  def process_admins(admins):
+      14 -    result = []
+      15 -    for a in admins:
+      16 -        if a.get("active"):
+      17 -            name = a.get("name", "Unknown")
+      18 -            email = a.get("email", "no-email")
+      19 -            result.append({"display": f"{name} <{email}>", "type": "admin"})
+      20 -    return result
+      20 +    return _format_active(admins, "admin")
+      21
+      22
+      23  def process_guests(guests):
+      24 -    result = []
+      25 -    for g in guests:
+      26 -        if g.get("active"):
+      27 -            name = g.get("name", "Unknown")
+      28 -            email = g.get("email", "no-email")
+      29 -            result.append({"display": f"{name} <{email}>", "type": "guest"})
+      30 -    return result
+      24 +    return _format_active(guests, "guest")
+      25
+      26
+      27  if __name__ == "__main__":
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T4_messy.py > /tmp/T4_refactored.out && diff /tmp/T4_original.out /tmp/T4_refactored.out && echo
+      "MATCH: output…)
+  ⎿  MATCH: outputs are identical
+     --- Refactored output ---
+     Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     … +2 lines (ctrl+o to expand)
+
+⏺ リファクタ内容:
+  - 3 つの process_* 関数の共通処理を _format_active(records, type_label) に抽出
+  - ループ + if + dict 構築をリスト内包表記に変換
+  - 公開 API（process_users / process_admins / process_guests）はそのまま維持
+  - process_users の type: "active" という既存挙動も保持
+
+  検証: diff で元の出力と完全一致を確認 (MATCH: outputs are identical)。
+
+✻ Sautéed for 24s
+
+❯ Create a CLI tool wc_tool.py that takes a filename argument, prints line/word/char counts like the wc command. Handle the case where the file does not exist
+   with a friendly error message. Test it on tests/T2_buggy.py and on a nonexistent file called nope.txt.
+
+⏺ Write(wc_tool.py)
+  ⎿  Wrote 33 lines to wc_tool.py
+       1 #!/usr/bin/env python3
+       2 """Minimal wc-like tool: prints line, word, and character counts."""
+       3 import sys
+       4 from pathlib import Path
+       5
+       6
+       7 def count(path: Path) -> tuple[int, int, int]:
+       8     text = path.read_text()
+       9     lines = text.splitlines()
+      10     words = text.split()
+     … +23 lines (ctrl+o to expand)
+
+⏺ Bash(echo "=== Test 1: existing file ===" && python3 wc_tool.py tests/T2_buggy.py && echo "" && echo "=== compare with system wc ===" && wc tests/T2_buggy.py
+       && echo…)
+  ⎿  === Test 1: existing file ===
+           16       43      342 tests/T2_buggy.py
+     … +6 lines (ctrl+o to expand)
+
+⏺ 作成完了。wc_tool.py は pathlib でファイルを開き、行数 / 単語数 / 文字数を出力します。
+
+  Test 1: 既存ファイル (tests/T2_buggy.py)
+        16       43      342 tests/T2_buggy.py
+  システムの wc コマンドの結果 (16 43 342) と一致。
+
+  Test 2: 存在しないファイル (nope.txt)
+  Error: file 'nope.txt' does not exist.
+  exit code 1 を返し、トレースバックを出さずに友好的なメッセージを表示。
+
+✻ Churned for 16s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    7%    ]⏰4h44m | 7d[    1%    ]⏰6d16h | Opus 4.7(30.0k/1.0M)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+
+Resume this session with:
+claude --resume 41dd919b-7d03-45c1-8f40-6f760e19ab3a
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ claude --model claude-sonnet-4-6 --permission-mode bypassPermissions
+╭─── Claude Code v2.1.126 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                                                               │
+│                 Welcome back moto!                 │ Run /init to create a CLAUDE.md file with instructions for Claude                                      │
+│                                                    │ ────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                                                             │
+│                      ▝▜█████▛▘                     │ The `/model` picker now lists models from your gateway's `/v1/models` endpoint when `ANTHROPIC_BASE_U… │
+│                        ▘▘ ▝▝                       │ - Added `claude project purge [path]` to delete all Claude Code state for a project (transcripts, tas… │
+│   Sonnet 4.6 · Claude Max · j3tm0t0@gmail.com's    │ `--dangerously-skip-permissions` now bypasses prompts for writes to `.claude/`, `.git/`, `.vscode/`, … │
+│   Organization                                     │ /release-notes for more                                                                                │
+│              ~/tmp/cc-reference-bench              │                                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ バグ: factorial の基底ケースが return 0 になっています。0! = 1 なので return 1 が正しい値です。
+
+  修正します。
+
+⏺ Update(tests/T2_buggy.py)
+  ⎿  Added 1 line, removed 1 line
+      1  def factorial(n):
+      2      if n == 0:
+      3 -        return 0
+      3 +        return 1
+      4      return n * factorial(n - 1)
+      5
+      6
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T2_buggy.py)
+  ⎿  factorial(5) = 120
+     factorial(0) = 1
+     fibonacci(7) = 13
+
+⏺ 修正内容: factorial の基底ケース return 0 → return 1（0! = 1 が数学的定義）
+
+  出力は正しく factorial(5) = 120、factorial(0) = 1、fibonacci(7) = 13 になりました。
+
+✻ Cooked for 14s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    8%    ]⏰4h43m | 7d[    1%    ]⏰6d16h | Sonnet 4.6(18.0k/600.0k)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+---
+[cooldown 5s]
+
+--- T3_multifile ---
+Prompt: Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py that imports from calc and runs 3 assertions. Run the test and show results.
+Elapsed: 21s
+Timing: ✻ Crunched for 18s
+
+  実行結果:
+  All 3 assertions passed.
+
+✻ Churned for 20s
+
+❯ Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to
+  verify output matches.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T4_messy.py > /tmp/T4_original.out && cat /tmp/T4_original.out)
+  ⎿  Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     Admins: [{'display': 'Charlie <charlie@example.com>', 'type': 'admin'}]
+     Guests: [{'display': 'Dave <dave@example.com>', 'type': 'guest'}]
+
+⏺ 3 つの関数の差分は type フィールドのみ。共通ロジックを抽出してリファクタします（process_users は元のまま type: "active" を返す挙動を維持）。
+
+⏺ Write(tests/T4_messy.py)
+  ⎿  Added 16 lines, removed 22 lines
+       1 -"""Messy code that needs refactoring."""
+       1 +"""Refactored: shared logic extracted, behavior preserved."""
+       2
+       3 +
+       4 +def _format_active(records, type_label):
+       5 +    return [
+       6 +        {
+       7 +            "display": f"{r.get('name', 'Unknown')} <{r.get('email', 'no-email')}>",
+       8 +            "type": type_label,
+       9 +        }
+      10 +        for r in records
+      11 +        if r.get("active")
+      12 +    ]
+      13 +
+      14 +
+      15  def process_users(users):
+       4 -    result = []
+       5 -    for u in users:
+       6 -        if u.get("active"):
+       7 -            name = u.get("name", "Unknown")
+       8 -            email = u.get("email", "no-email")
+       9 -            result.append({"display": f"{name} <{email}>", "type": "active"})
+      10 -    return result
+      16 +    return _format_active(users, "active")
+      17
+      18
+      19  def process_admins(admins):
+      14 -    result = []
+      15 -    for a in admins:
+      16 -        if a.get("active"):
+      17 -            name = a.get("name", "Unknown")
+      18 -            email = a.get("email", "no-email")
+      19 -            result.append({"display": f"{name} <{email}>", "type": "admin"})
+      20 -    return result
+      20 +    return _format_active(admins, "admin")
+      21
+      22
+      23  def process_guests(guests):
+      24 -    result = []
+      25 -    for g in guests:
+      26 -        if g.get("active"):
+      27 -            name = g.get("name", "Unknown")
+      28 -            email = g.get("email", "no-email")
+      29 -            result.append({"display": f"{name} <{email}>", "type": "guest"})
+      30 -    return result
+      24 +    return _format_active(guests, "guest")
+      25
+      26
+      27  if __name__ == "__main__":
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T4_messy.py > /tmp/T4_refactored.out && diff /tmp/T4_original.out /tmp/T4_refactored.out && echo
+      "MATCH: output…)
+  ⎿  MATCH: outputs are identical
+     --- Refactored output ---
+     Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     … +2 lines (ctrl+o to expand)
+
+⏺ リファクタ内容:
+  - 3 つの process_* 関数の共通処理を _format_active(records, type_label) に抽出
+  - ループ + if + dict 構築をリスト内包表記に変換
+  - 公開 API（process_users / process_admins / process_guests）はそのまま維持
+  - process_users の type: "active" という既存挙動も保持
+
+  検証: diff で元の出力と完全一致を確認 (MATCH: outputs are identical)。
+
+✻ Sautéed for 24s
+
+❯ Create a CLI tool wc_tool.py that takes a filename argument, prints line/word/char counts like the wc command. Handle the case where the file does not exist
+   with a friendly error message. Test it on tests/T2_buggy.py and on a nonexistent file called nope.txt.
+
+⏺ Write(wc_tool.py)
+  ⎿  Wrote 33 lines to wc_tool.py
+       1 #!/usr/bin/env python3
+       2 """Minimal wc-like tool: prints line, word, and character counts."""
+       3 import sys
+       4 from pathlib import Path
+       5
+       6
+       7 def count(path: Path) -> tuple[int, int, int]:
+       8     text = path.read_text()
+       9     lines = text.splitlines()
+      10     words = text.split()
+     … +23 lines (ctrl+o to expand)
+
+⏺ Bash(echo "=== Test 1: existing file ===" && python3 wc_tool.py tests/T2_buggy.py && echo "" && echo "=== compare with system wc ===" && wc tests/T2_buggy.py
+       && echo…)
+  ⎿  === Test 1: existing file ===
+           16       43      342 tests/T2_buggy.py
+     … +6 lines (ctrl+o to expand)
+
+⏺ 作成完了。wc_tool.py は pathlib でファイルを開き、行数 / 単語数 / 文字数を出力します。
+
+  Test 1: 既存ファイル (tests/T2_buggy.py)
+        16       43      342 tests/T2_buggy.py
+  システムの wc コマンドの結果 (16 43 342) と一致。
+
+  Test 2: 存在しないファイル (nope.txt)
+  Error: file 'nope.txt' does not exist.
+  exit code 1 を返し、トレースバックを出さずに友好的なメッセージを表示。
+
+✻ Churned for 16s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    7%    ]⏰4h44m | 7d[    1%    ]⏰6d16h | Opus 4.7(30.0k/1.0M)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+
+Resume this session with:
+claude --resume 41dd919b-7d03-45c1-8f40-6f760e19ab3a
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ claude --model claude-sonnet-4-6 --permission-mode bypassPermissions
+╭─── Claude Code v2.1.126 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                                                               │
+│                 Welcome back moto!                 │ Run /init to create a CLAUDE.md file with instructions for Claude                                      │
+│                                                    │ ────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                                                             │
+│                      ▝▜█████▛▘                     │ The `/model` picker now lists models from your gateway's `/v1/models` endpoint when `ANTHROPIC_BASE_U… │
+│                        ▘▘ ▝▝                       │ - Added `claude project purge [path]` to delete all Claude Code state for a project (transcripts, tas… │
+│   Sonnet 4.6 · Claude Max · j3tm0t0@gmail.com's    │ `--dangerously-skip-permissions` now bypasses prompts for writes to `.claude/`, `.git/`, `.vscode/`, … │
+│   Organization                                     │ /release-notes for more                                                                                │
+│              ~/tmp/cc-reference-bench              │                                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ バグ: factorial の基底ケースが return 0 になっています。0! = 1 なので return 1 が正しい値です。
+
+  修正します。
+
+⏺ Update(tests/T2_buggy.py)
+  ⎿  Added 1 line, removed 1 line
+      1  def factorial(n):
+      2      if n == 0:
+      3 -        return 0
+      3 +        return 1
+      4      return n * factorial(n - 1)
+      5
+      6
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T2_buggy.py)
+  ⎿  factorial(5) = 120
+     factorial(0) = 1
+     fibonacci(7) = 13
+
+⏺ 修正内容: factorial の基底ケース return 0 → return 1（0! = 1 が数学的定義）
+
+  出力は正しく factorial(5) = 120、factorial(0) = 1、fibonacci(7) = 13 になりました。
+
+✻ Cooked for 14s
+
+❯ Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py
+   that imports from calc and runs 3 assertions. Run the test and show results.
+
+⏺ 3ファイルを作成します。
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Write(calc/ops.py)
+  ⎿  Wrote 6 lines to calc/ops.py
+      1 def add(a, b):
+      2     return a + b
+      3
+      4
+      5 def multiply(a, b):
+      6     return a * b
+
+⏺ Write(calc/__init__.py)
+  ⎿  Wrote 3 lines to calc/__init__.py
+      1 from calc.ops import add, multiply
+      2
+      3 __all__ = ["add", "multiply"]
+
+⏺ Write(test_calc.py)
+  ⎿  Wrote 7 lines to test_calc.py
+      1 from calc import add, multiply
+      2
+      3 assert add(2, 3) == 5, "add(2, 3) should be 5"
+      4 assert multiply(4, 5) == 20, "multiply(4, 5) should be 20"
+      5 assert add(-1, 1) == 0, "add(-1, 1) should be 0"
+      6
+      7 print("All assertions passed.")
+
+⏺ Bash(python3 test_calc.py)
+  ⎿  All assertions passed.
+
+⏺ 全アサション通過しました。
+
+  ┌──────────────────┬─────────────────────────────────────────────┐
+  │     ファイル     │                    役割                     │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ calc/ops.py      │ add / multiply の実装                       │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ calc/__init__.py │ ops から両関数をエクスポート                │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ test_calc.py     │ 3つのアサション (add, multiply, 負数の add) │
+  └──────────────────┴─────────────────────────────────────────────┘
+
+✻ Crunched for 18s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    8%    ]⏰4h43m | 7d[    1%    ]⏰6d16h | Sonnet 4.6(18.0k/600.0k)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+---
+[cooldown 5s]
+
+--- T4_refactor ---
+Prompt: Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to verify output matches.
+Elapsed: 27s
+Timing: ✻ Cogitated for 21s
+     … +2 lines (ctrl+o to expand)
+
+⏺ リファクタ内容:
+  - 3 つの process_* 関数の共通処理を _format_active(records, type_label) に抽出
+  - ループ + if + dict 構築をリスト内包表記に変換
+  - 公開 API（process_users / process_admins / process_guests）はそのまま維持
+  - process_users の type: "active" という既存挙動も保持
+
+  検証: diff で元の出力と完全一致を確認 (MATCH: outputs are identical)。
+
+✻ Sautéed for 24s
+
+❯ Create a CLI tool wc_tool.py that takes a filename argument, prints line/word/char counts like the wc command. Handle the case where the file does not exist
+   with a friendly error message. Test it on tests/T2_buggy.py and on a nonexistent file called nope.txt.
+
+⏺ Write(wc_tool.py)
+  ⎿  Wrote 33 lines to wc_tool.py
+       1 #!/usr/bin/env python3
+       2 """Minimal wc-like tool: prints line, word, and character counts."""
+       3 import sys
+       4 from pathlib import Path
+       5
+       6
+       7 def count(path: Path) -> tuple[int, int, int]:
+       8     text = path.read_text()
+       9     lines = text.splitlines()
+      10     words = text.split()
+     … +23 lines (ctrl+o to expand)
+
+⏺ Bash(echo "=== Test 1: existing file ===" && python3 wc_tool.py tests/T2_buggy.py && echo "" && echo "=== compare with system wc ===" && wc tests/T2_buggy.py
+       && echo…)
+  ⎿  === Test 1: existing file ===
+           16       43      342 tests/T2_buggy.py
+     … +6 lines (ctrl+o to expand)
+
+⏺ 作成完了。wc_tool.py は pathlib でファイルを開き、行数 / 単語数 / 文字数を出力します。
+
+  Test 1: 既存ファイル (tests/T2_buggy.py)
+        16       43      342 tests/T2_buggy.py
+  システムの wc コマンドの結果 (16 43 342) と一致。
+
+  Test 2: 存在しないファイル (nope.txt)
+  Error: file 'nope.txt' does not exist.
+  exit code 1 を返し、トレースバックを出さずに友好的なメッセージを表示。
+
+✻ Churned for 16s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    7%    ]⏰4h44m | 7d[    1%    ]⏰6d16h | Opus 4.7(30.0k/1.0M)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+
+Resume this session with:
+claude --resume 41dd919b-7d03-45c1-8f40-6f760e19ab3a
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ claude --model claude-sonnet-4-6 --permission-mode bypassPermissions
+╭─── Claude Code v2.1.126 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                                                               │
+│                 Welcome back moto!                 │ Run /init to create a CLAUDE.md file with instructions for Claude                                      │
+│                                                    │ ────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                                                             │
+│                      ▝▜█████▛▘                     │ The `/model` picker now lists models from your gateway's `/v1/models` endpoint when `ANTHROPIC_BASE_U… │
+│                        ▘▘ ▝▝                       │ - Added `claude project purge [path]` to delete all Claude Code state for a project (transcripts, tas… │
+│   Sonnet 4.6 · Claude Max · j3tm0t0@gmail.com's    │ `--dangerously-skip-permissions` now bypasses prompts for writes to `.claude/`, `.git/`, `.vscode/`, … │
+│   Organization                                     │ /release-notes for more                                                                                │
+│              ~/tmp/cc-reference-bench              │                                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ バグ: factorial の基底ケースが return 0 になっています。0! = 1 なので return 1 が正しい値です。
+
+  修正します。
+
+⏺ Update(tests/T2_buggy.py)
+  ⎿  Added 1 line, removed 1 line
+      1  def factorial(n):
+      2      if n == 0:
+      3 -        return 0
+      3 +        return 1
+      4      return n * factorial(n - 1)
+      5
+      6
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T2_buggy.py)
+  ⎿  factorial(5) = 120
+     factorial(0) = 1
+     fibonacci(7) = 13
+
+⏺ 修正内容: factorial の基底ケース return 0 → return 1（0! = 1 が数学的定義）
+
+  出力は正しく factorial(5) = 120、factorial(0) = 1、fibonacci(7) = 13 になりました。
+
+✻ Cooked for 14s
+
+❯ Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py
+   that imports from calc and runs 3 assertions. Run the test and show results.
+
+⏺ 3ファイルを作成します。
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Write(calc/ops.py)
+  ⎿  Wrote 6 lines to calc/ops.py
+      1 def add(a, b):
+      2     return a + b
+      3
+      4
+      5 def multiply(a, b):
+      6     return a * b
+
+⏺ Write(calc/__init__.py)
+  ⎿  Wrote 3 lines to calc/__init__.py
+      1 from calc.ops import add, multiply
+      2
+      3 __all__ = ["add", "multiply"]
+
+⏺ Write(test_calc.py)
+  ⎿  Wrote 7 lines to test_calc.py
+      1 from calc import add, multiply
+      2
+      3 assert add(2, 3) == 5, "add(2, 3) should be 5"
+      4 assert multiply(4, 5) == 20, "multiply(4, 5) should be 20"
+      5 assert add(-1, 1) == 0, "add(-1, 1) should be 0"
+      6
+      7 print("All assertions passed.")
+
+⏺ Bash(python3 test_calc.py)
+  ⎿  All assertions passed.
+
+⏺ 全アサション通過しました。
+
+  ┌──────────────────┬─────────────────────────────────────────────┐
+  │     ファイル     │                    役割                     │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ calc/ops.py      │ add / multiply の実装                       │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ calc/__init__.py │ ops から両関数をエクスポート                │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ test_calc.py     │ 3つのアサション (add, multiply, 負数の add) │
+  └──────────────────┴─────────────────────────────────────────────┘
+
+✻ Crunched for 18s
+
+❯ Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to
+  verify output matches.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ まず元の出力を取得してからリファクタリングします。
+
+⏺ Bash(python3 tests/T4_messy.py)
+  ⎿  Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     Admins: [{'display': 'Charlie <charlie@example.com>', 'type': 'admin'}]
+     Guests: [{'display': 'Dave <dave@example.com>', 'type': 'guest'}]
+
+⏺ 3関数はロジックが同一で type ラベルだけ異なります。共通処理を1関数に統合します。
+
+⏺ Write(tests/T4_messy.py)
+  ⎿  Added 11 lines, removed 21 lines
+       1  """Messy code that needs refactoring."""
+       2
+       3 +def process_people(people, kind):
+       4 +    return [
+       5 +        {"display": f"{p.get('name', 'Unknown')} <{p.get('email', 'no-email')}>", "type": kind}
+       6 +        for p in people
+       7 +        if p.get("active")
+       8 +    ]
+       9 +
+      10 +
+      11  def process_users(users):
+       4 -    result = []
+       5 -    for u in users:
+       6 -        if u.get("active"):
+       7 -            name = u.get("name", "Unknown")
+       8 -            email = u.get("email", "no-email")
+       9 -            result.append({"display": f"{name} <{email}>", "type": "active"})
+      10 -    return result
+      12 +    return process_people(users, "active")
+      13
+      14
+      15  def process_admins(admins):
+      14 -    result = []
+      15 -    for a in admins:
+      16 -        if a.get("active"):
+      17 -            name = a.get("name", "Unknown")
+      18 -            email = a.get("email", "no-email")
+      19 -            result.append({"display": f"{name} <{email}>", "type": "admin"})
+      20 -    return result
+      16 +    return process_people(admins, "admin")
+      17
+      18
+      19  def process_guests(guests):
+      24 -    result = []
+      25 -    for g in guests:
+      26 -        if g.get("active"):
+      27 -            name = g.get("name", "Unknown")
+      28 -            email = g.get("email", "no-email")
+      29 -            result.append({"display": f"{name} <{email}>", "type": "guest"})
+      30 -    return result
+      20 +    return process_people(guests, "guest")
+      21
+      22
+      23  if __name__ == "__main__":
+
+⏺ Bash(python3 tests/T4_messy.py)
+  ⎿  Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     Admins: [{'display': 'Charlie <charlie@example.com>', 'type': 'admin'}]
+     Guests: [{'display': 'Dave <dave@example.com>', 'type': 'guest'}]
+
+⏺ 出力が完全に一致しました。
+
+  変更内容:
+  - 重複していた3関数のループ処理を process_people(people, kind) に統合
+  - 各公開関数は process_people への1行の委譲に簡略化
+  - リスト内包表記で可読性を向上
+
+✻ Cogitated for 21s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    8%    ]⏰4h42m | 7d[    1%    ]⏰6d16h | Sonnet 4.6(18.0k/600.0k)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+---
+[cooldown 5s]
+
+--- T5_cli ---
+Prompt: Create a CLI tool wc_tool.py that takes a filename argument, prints line/word/char counts like the wc command. Handle the case where the file does not exist with a friendly error message. Test it on tests/T2_buggy.py and on a nonexistent file called nope.txt.
+Elapsed: 16s
+Timing: ✻ Cooked for 13s
+
+  Test 1: 既存ファイル (tests/T2_buggy.py)
+        16       43      342 tests/T2_buggy.py
+  システムの wc コマンドの結果 (16 43 342) と一致。
+
+  Test 2: 存在しないファイル (nope.txt)
+  Error: file 'nope.txt' does not exist.
+  exit code 1 を返し、トレースバックを出さずに友好的なメッセージを表示。
+
+✻ Churned for 16s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    7%    ]⏰4h44m | 7d[    1%    ]⏰6d16h | Opus 4.7(30.0k/1.0M)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+
+Resume this session with:
+claude --resume 41dd919b-7d03-45c1-8f40-6f760e19ab3a
+moto@macmini-m4pro:~/tmp/cc-reference-bench $ claude --model claude-sonnet-4-6 --permission-mode bypassPermissions
+╭─── Claude Code v2.1.126 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                    │ Tips for getting started                                                                               │
+│                 Welcome back moto!                 │ Run /init to create a CLAUDE.md file with instructions for Claude                                      │
+│                                                    │ ────────────────────────────────────────────────────────────────────────────────────────────────────── │
+│                       ▐▛███▜▌                      │ What's new                                                                                             │
+│                      ▝▜█████▛▘                     │ The `/model` picker now lists models from your gateway's `/v1/models` endpoint when `ANTHROPIC_BASE_U… │
+│                        ▘▘ ▝▝                       │ - Added `claude project purge [path]` to delete all Claude Code state for a project (transcripts, tas… │
+│   Sonnet 4.6 · Claude Max · j3tm0t0@gmail.com's    │ `--dangerously-skip-permissions` now bypasses prompts for writes to `.claude/`, `.git/`, `.vscode/`, … │
+│   Organization                                     │ /release-notes for more                                                                                │
+│              ~/tmp/cc-reference-bench              │                                                                                                        │
+╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+❯ Read the file tests/T2_buggy.py, identify the bug(s), fix them in-place, and run the fixed version. Show the corrected output. Be concise.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ バグ: factorial の基底ケースが return 0 になっています。0! = 1 なので return 1 が正しい値です。
+
+  修正します。
+
+⏺ Update(tests/T2_buggy.py)
+  ⎿  Added 1 line, removed 1 line
+      1  def factorial(n):
+      2      if n == 0:
+      3 -        return 0
+      3 +        return 1
+      4      return n * factorial(n - 1)
+      5
+      6
+
+⏺ Bash(python3 /Users/moto/tmp/cc-reference-bench/tests/T2_buggy.py)
+  ⎿  factorial(5) = 120
+     factorial(0) = 1
+     fibonacci(7) = 13
+
+⏺ 修正内容: factorial の基底ケース return 0 → return 1（0! = 1 が数学的定義）
+
+  出力は正しく factorial(5) = 120、factorial(0) = 1、fibonacci(7) = 13 になりました。
+
+✻ Cooked for 14s
+
+❯ Create a small Python package called calc with: 1) calc/__init__.py that exports add and multiply, 2) calc/ops.py with the actual functions, 3) test_calc.py
+   that imports from calc and runs 3 assertions. Run the test and show results.
+
+⏺ 3ファイルを作成します。
+
+  Listed 1 directory (ctrl+o to expand)
+
+⏺ Write(calc/ops.py)
+  ⎿  Wrote 6 lines to calc/ops.py
+      1 def add(a, b):
+      2     return a + b
+      3
+      4
+      5 def multiply(a, b):
+      6     return a * b
+
+⏺ Write(calc/__init__.py)
+  ⎿  Wrote 3 lines to calc/__init__.py
+      1 from calc.ops import add, multiply
+      2
+      3 __all__ = ["add", "multiply"]
+
+⏺ Write(test_calc.py)
+  ⎿  Wrote 7 lines to test_calc.py
+      1 from calc import add, multiply
+      2
+      3 assert add(2, 3) == 5, "add(2, 3) should be 5"
+      4 assert multiply(4, 5) == 20, "multiply(4, 5) should be 20"
+      5 assert add(-1, 1) == 0, "add(-1, 1) should be 0"
+      6
+      7 print("All assertions passed.")
+
+⏺ Bash(python3 test_calc.py)
+  ⎿  All assertions passed.
+
+⏺ 全アサション通過しました。
+
+  ┌──────────────────┬─────────────────────────────────────────────┐
+  │     ファイル     │                    役割                     │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ calc/ops.py      │ add / multiply の実装                       │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ calc/__init__.py │ ops から両関数をエクスポート                │
+  ├──────────────────┼─────────────────────────────────────────────┤
+  │ test_calc.py     │ 3つのアサション (add, multiply, 負数の add) │
+  └──────────────────┴─────────────────────────────────────────────┘
+
+✻ Crunched for 18s
+
+❯ Read tests/T4_messy.py, refactor it to remove code duplication and improve readability. Keep the same behavior. Run the original and refactored versions to
+  verify output matches.
+
+  Read 1 file (ctrl+o to expand)
+
+⏺ まず元の出力を取得してからリファクタリングします。
+
+⏺ Bash(python3 tests/T4_messy.py)
+  ⎿  Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     Admins: [{'display': 'Charlie <charlie@example.com>', 'type': 'admin'}]
+     Guests: [{'display': 'Dave <dave@example.com>', 'type': 'guest'}]
+
+⏺ 3関数はロジックが同一で type ラベルだけ異なります。共通処理を1関数に統合します。
+
+⏺ Write(tests/T4_messy.py)
+  ⎿  Added 11 lines, removed 21 lines
+       1  """Messy code that needs refactoring."""
+       2
+       3 +def process_people(people, kind):
+       4 +    return [
+       5 +        {"display": f"{p.get('name', 'Unknown')} <{p.get('email', 'no-email')}>", "type": kind}
+       6 +        for p in people
+       7 +        if p.get("active")
+       8 +    ]
+       9 +
+      10 +
+      11  def process_users(users):
+       4 -    result = []
+       5 -    for u in users:
+       6 -        if u.get("active"):
+       7 -            name = u.get("name", "Unknown")
+       8 -            email = u.get("email", "no-email")
+       9 -            result.append({"display": f"{name} <{email}>", "type": "active"})
+      10 -    return result
+      12 +    return process_people(users, "active")
+      13
+      14
+      15  def process_admins(admins):
+      14 -    result = []
+      15 -    for a in admins:
+      16 -        if a.get("active"):
+      17 -            name = a.get("name", "Unknown")
+      18 -            email = a.get("email", "no-email")
+      19 -            result.append({"display": f"{name} <{email}>", "type": "admin"})
+      20 -    return result
+      16 +    return process_people(admins, "admin")
+      17
+      18
+      19  def process_guests(guests):
+      24 -    result = []
+      25 -    for g in guests:
+      26 -        if g.get("active"):
+      27 -            name = g.get("name", "Unknown")
+      28 -            email = g.get("email", "no-email")
+      29 -            result.append({"display": f"{name} <{email}>", "type": "guest"})
+      30 -    return result
+      20 +    return process_people(guests, "guest")
+      21
+      22
+      23  if __name__ == "__main__":
+
+⏺ Bash(python3 tests/T4_messy.py)
+  ⎿  Users: [{'display': 'Alice <alice@example.com>', 'type': 'active'}]
+     Admins: [{'display': 'Charlie <charlie@example.com>', 'type': 'admin'}]
+     Guests: [{'display': 'Dave <dave@example.com>', 'type': 'guest'}]
+
+⏺ 出力が完全に一致しました。
+
+  変更内容:
+  - 重複していた3関数のループ処理を process_people(people, kind) に統合
+  - 各公開関数は process_people への1行の委譲に簡略化
+  - リスト内包表記で可読性を向上
+
+✻ Cogitated for 21s
+
+❯ Create a CLI tool wc_tool.py that takes a filename argument, prints line/word/char counts like the wc command. Handle the case where the file does not exist
+   with a friendly error message. Test it on tests/T2_buggy.py and on a nonexistent file called nope.txt.
+
+⏺ Write(wc_tool.py)
+  ⎿  Wrote 23 lines to wc_tool.py
+       1 import sys
+       2
+       3
+       4 def main():
+       5     if len(sys.argv) != 2:
+       6         print("Usage: wc_tool.py <filename>")
+       7         sys.exit(1)
+       8
+       9     path = sys.argv[1]
+      10     try:
+     … +13 lines (ctrl+o to expand)
+
+⏺ Bash(python3 wc_tool.py tests/T2_buggy.py && python3 wc_tool.py nope.txt)
+  ⎿  Error: Exit code 1
+           16      43     342  tests/T2_buggy.py
+     Error: ファイル 'nope.txt' が見つかりません。
+
+⏺ 両ケース正常動作しました。
+
+  ┌───────────────────┬─────────────────────────────────────────────────────┐
+  │      ケース       │                        結果                         │
+  ├───────────────────┼─────────────────────────────────────────────────────┤
+  │ tests/T2_buggy.py │ 16行 / 43語 / 342文字                               │
+  ├───────────────────┼─────────────────────────────────────────────────────┤
+  │ nope.txt          │ 友好的なエラーメッセージを表示して終了コード1で終了 │
+  └───────────────────┴─────────────────────────────────────────────────────┘
+
+  (wc コマンドと同様、出力フォーマットは 行数 語数 文字数 ファイル名 の順です。)
+
+✻ Cooked for 13s
+
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+❯ 
+───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
+  5h[    8%    ]⏰4h42m | 7d[    1%    ]⏰6d16h | Sonnet 4.6(24.0k/600.0k)
+  ⏵⏵ bypass permissions on (shift+tab to cycle)
+---
+
+=== All tests done ===
+End: 2026年 5月 3日 日曜日 01時47分45秒 JST
