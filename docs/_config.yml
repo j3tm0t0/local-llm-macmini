@@ -18,7 +18,7 @@ defaults:
     values:
       image: /assets/model-comparison.png
 
-color_scheme: light
+color_scheme: dark
 search_enabled: true
 
 aux_links:

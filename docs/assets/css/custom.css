@@ -1,0 +1,195 @@
+/* ============================================================
+ * Cool dark theme overrides on top of just-the-docs `dark` scheme
+ * ============================================================ */
+
+:root {
+  --accent-cyan:   #22d3ee;     /* link / accent */
+  --accent-cyan-2: #06b6d4;     /* hover */
+  --accent-lime:   #a3e635;     /* call-out */
+  --accent-pink:   #f472b6;     /* highlight */
+  --bg-deep:       #0b0f17;     /* deeper black-blue */
+  --bg-panel:      #111827;     /* panel */
+  --border-soft:   rgba(255,255,255,0.08);
+  --text-bright:   #f3f4f6;
+  --text-mute:     #9ca3af;
+}
+
+/* ---- Global typography ---- */
+html, body {
+  font-family: "Inter", "Noto Sans JP", -apple-system, BlinkMacSystemFont,
+               "Hiragino Sans", "ヒラギノ角ゴシック", "Yu Gothic", system-ui, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+  letter-spacing: 0.005em;
+  background: var(--bg-deep);
+  color: var(--text-bright);
+}
+
+code, pre, kbd, samp, .text-mono {
+  font-family: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* ---- Headings: tighten + add weight + accent color ---- */
+.main-content h1,
+.main-content h2,
+.main-content h3,
+.main-content h4 {
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-bright);
+}
+.main-content h1 { line-height: 1.2; }
+.main-content h2 {
+  border-bottom: 1px solid var(--border-soft);
+  padding-bottom: 0.4em;
+  margin-top: 2.2em;
+}
+
+/* ---- Hero (the .fs-9 + .fs-5 block at the top of index) ---- */
+.main-content .fs-9 {
+  font-size: 2.6rem !important;
+  font-weight: 800;
+  line-height: 1.15;
+  background: linear-gradient(120deg, var(--accent-cyan) 0%, var(--accent-lime) 70%, var(--accent-pink) 100%);
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-top: 1rem;
+  margin-bottom: 0.6rem;
+}
+.main-content .fs-5 {
+  color: var(--text-mute);
+  font-size: 1.15rem !important;
+  line-height: 1.65;
+  margin-bottom: 1.6rem;
+}
+.main-content .fs-5 strong {
+  color: var(--text-bright);
+  font-weight: 600;
+}
+
+/* ---- Links ---- */
+a, .main-content a {
+  color: var(--accent-cyan);
+  text-decoration: none;
+  border-bottom: 1px dashed transparent;
+  transition: color 120ms ease, border-color 120ms ease;
+}
+a:hover, .main-content a:hover {
+  color: var(--accent-cyan-2);
+  border-bottom-color: var(--accent-cyan-2);
+}
+
+/* ---- Tables: cleaner, snappier ---- */
+.main-content table {
+  border-collapse: collapse;
+  border-radius: 8px;
+  overflow: hidden;
+}
+.main-content table th {
+  background: rgba(34, 211, 238, 0.08);
+  color: var(--text-bright);
+  font-weight: 600;
+  border-bottom: 1px solid var(--border-soft);
+}
+.main-content table tr:nth-child(even) td {
+  background: rgba(255,255,255,0.02);
+}
+.main-content table td {
+  border-bottom: 1px solid var(--border-soft);
+}
+
+/* ---- Inline code: glowy ---- */
+.main-content code,
+.main-content :not(pre) > code {
+  background: rgba(34, 211, 238, 0.08);
+  color: var(--accent-cyan);
+  padding: 0.12em 0.4em;
+  border-radius: 4px;
+  font-size: 0.92em;
+  border: 1px solid rgba(34, 211, 238, 0.18);
+}
+
+/* ---- Code blocks: subtle border + glow ---- */
+.main-content pre,
+.main-content div.highlighter-rouge {
+  background: var(--bg-panel) !important;
+  border: 1px solid var(--border-soft);
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(34, 211, 238, 0.04);
+}
+.main-content pre code {
+  background: transparent !important;
+  border: none;
+  color: #e5e7eb;
+}
+
+/* ---- Blockquotes: accent rail ---- */
+.main-content blockquote {
+  border-left: 3px solid var(--accent-cyan);
+  background: rgba(34, 211, 238, 0.04);
+  padding: 0.8em 1.2em;
+  margin: 1.2em 0;
+  border-radius: 0 6px 6px 0;
+  color: var(--text-mute);
+}
+.main-content blockquote strong {
+  color: var(--text-bright);
+}
+
+/* ---- Image: sharper presentation, slight glow on the chart ---- */
+.main-content img {
+  border-radius: 8px;
+  box-shadow: 0 8px 28px rgba(0, 0, 0, 0.5),
+              0 0 0 1px var(--border-soft);
+  margin: 1em 0;
+}
+
+/* ---- Sidebar nav (just-the-docs) ---- */
+.side-bar {
+  background: var(--bg-deep);
+  border-right: 1px solid var(--border-soft);
+}
+.site-title {
+  font-weight: 700;
+  background: linear-gradient(120deg, var(--accent-cyan), var(--accent-lime));
+  -webkit-background-clip: text;
+          background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.nav-list .nav-list-item .nav-list-link {
+  color: var(--text-mute);
+}
+.nav-list .nav-list-item .nav-list-link:hover,
+.nav-list .nav-list-item .nav-list-link.active {
+  background: rgba(34, 211, 238, 0.08);
+  color: var(--accent-cyan);
+  border-radius: 4px;
+}
+
+/* ---- "Source on GitHub" button ---- */
+.btn.btn-outline {
+  background: transparent;
+  color: var(--accent-cyan);
+  border: 1px solid var(--accent-cyan);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  transition: all 120ms ease;
+}
+.btn.btn-outline:hover {
+  background: rgba(34, 211, 238, 0.1);
+  color: var(--accent-lime);
+  border-color: var(--accent-lime);
+  box-shadow: 0 0 14px rgba(163, 230, 53, 0.18);
+}
+
+/* ---- Misc polish ---- */
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--border-soft);
+  margin: 2.5em 0;
+}
+::selection {
+  background: rgba(34, 211, 238, 0.32);
+  color: var(--text-bright);
+}
