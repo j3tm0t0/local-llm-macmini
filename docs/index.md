@@ -2,14 +2,15 @@
 title: Home
 layout: default
 nav_order: 1
-description: "Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。「ベンチが速いほど怪しい」新しい失敗パターンの正体"
+description: "Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。常用はやはり厳しいが、Claude が落ちている時の避難先としてなら成立する"
 permalink: /
 ---
 
-# Claude Code をローカル LLM で動かしたら騙されかけた話
+# Claude Code、ローカル LLM でどこまで戦える？
 {: .fs-9 }
 
-Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを **T2-T5 同条件で徹底比較**。本命モデルは何か、そして「ベンチが速いほど怪しい」新しい失敗パターンの正体。
+Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。<br>
+**結論: クラウド比 4〜13 倍遅い。常用は厳しいが、Claude が落ちている時の避難先としては成立する。**
 {: .fs-5 .fw-300 }
 
 ---
@@ -76,6 +77,8 @@ T2 バグ修正 / T3 マルチファイルパッケージ / T4 リファクタ /
 | MLX robustonian fork | 1106s | 13.8x |
 
 ローカル LLM が Anthropic クラウド版に **速度で勝つ場面はない**。それでもローカルを選ぶ理由は「オフライン要件 / 機密データ / API 課金回避 / 学習価値」のいずれかに絞られる。「Mac mini で Claude Code 体験を高速化したい」だけならクラウド版を素直に使うのが最も合理的。
+
+実用上の現実的な位置付けは、**「常用は厳しいが、Claude が落ちている時の避難先 (フォールバック) としてなら成立する」** あたり。OpenAI や Anthropic のサービス障害時に作業を止めない保険として、`local-claude` エイリアスを忍ばせておくのは悪くない投資。
 
 ---
 

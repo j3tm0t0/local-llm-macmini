@@ -1,5 +1,5 @@
-title: Claude Code をローカル LLM で動かしたら騙されかけた話
-description: Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。「ベンチが速いほど怪しい」新しい失敗パターンの正体
+title: Claude Code、ローカル LLM でどこまで戦える？ Mac mini M4 Pro 検証
+description: Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。常用はやはり厳しいが、Claude が落ちている時の避難先としてなら成立する
 remote_theme: just-the-docs/just-the-docs
 
 url: https://j3tm0t0.github.io
