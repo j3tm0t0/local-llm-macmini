@@ -1,6 +1,7 @@
 /**
- * Replace the just-the-docs left sidebar's site-nav with a TOC of the
- * current page's h2 / h3 headings. Keeps a "Top" link at the top.
+ * Append a TOC of the current page's h2 / h3 headings to the just-the-docs
+ * left sidebar, BELOW the existing site-nav (page list).
+ *
  * Active heading is highlighted on scroll via IntersectionObserver.
  */
 (function () {
@@ -12,10 +13,20 @@
     const headings = Array.from(main.querySelectorAll("h2[id], h3[id]"));
     if (headings.length === 0) return;
 
-    // Wipe the existing nav (page list)
-    navList.innerHTML = "";
+    // Separator + section header
+    const sep = document.createElement("li");
+    sep.className = "page-toc-sep";
+    navList.appendChild(sep);
 
-    // "Top" link
+    const header = document.createElement("li");
+    header.className = "page-toc-header-item";
+    const headerSpan = document.createElement("span");
+    headerSpan.className = "page-toc-header";
+    headerSpan.textContent = "On this page";
+    header.appendChild(headerSpan);
+    navList.appendChild(header);
+
+    // "▲ Top" link
     const topItem = document.createElement("li");
     topItem.className = "nav-list-item page-toc-item";
     const topLink = document.createElement("a");
@@ -59,7 +70,6 @@
 
     if ("IntersectionObserver" in window) {
       const obs = new IntersectionObserver(function (entries) {
-        // Pick the top-most heading currently intersecting.
         const visible = entries
           .filter(function (e) { return e.isIntersecting; })
           .map(function (e) { return e.target; });

@@ -242,7 +242,25 @@ a:hover, .main-content a:hover {
   border-radius: 4px;
 }
 
-/* ---- Page-TOC sidebar (replaces site-nav with current page's h2/h3 anchors) ---- */
+/* ---- Page-TOC sidebar (appended below the site-nav page list) ---- */
+.page-toc-sep {
+  list-style: none;
+  border-top: 1px solid var(--border-soft);
+  margin: 0.8rem 0.4rem 0;
+  padding: 0;
+  height: 0;
+}
+.page-toc-header-item {
+  list-style: none;
+  padding: 0.6rem 0.8rem 0.2rem;
+}
+.page-toc-header {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-mute);
+}
 .page-toc-link {
   display: block;
   padding: 0.32rem 0.6rem;
@@ -266,19 +284,8 @@ a:hover, .main-content a:hover {
 .page-toc-top {
   font-weight: 600;
   letter-spacing: 0.04em;
-  font-size: 0.78rem !important;
-  text-transform: uppercase;
+  font-size: 0.8rem !important;
   color: var(--accent-cyan) !important;
-  border-bottom: 1px solid var(--border-soft);
-  padding-bottom: 0.6rem !important;
-  margin-bottom: 0.4rem;
-}
-.page-toc-top::before {
-  content: "On this page  ";
-  color: var(--text-mute);
-  font-weight: 500;
-  text-transform: none;
-  letter-spacing: normal;
 }
 
 /* ---- "Source on GitHub" button ---- */
