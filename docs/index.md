@@ -2,11 +2,17 @@
 title: Home
 layout: default
 nav_order: 1
-description: "Mac mini M4 Pro 64GB で Claude Code をローカル LLM で動かす検証"
+description: "Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。「ベンチが速いほど怪しい」新しい失敗パターンの正体"
 permalink: /
 ---
 
-# local-llm-macmini
+# Claude Code をローカル LLM で動かしたら騙されかけた話
+{: .fs-9 }
+
+Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを **T2-T5 同条件で徹底比較**。本命モデルは何か、そして「ベンチが速いほど怪しい」新しい失敗パターンの正体。
+{: .fs-5 .fw-300 }
+
+---
 
 Mac mini M4 Pro (64GB) で **Claude Code** をローカル LLM で動かすための検証結果・設定・スクリプト集。
 Ollama 版と MLX (vllm-mlx / robustonian-mlx-lm) 版を **同一テストスイート** (T2-T5) で突き合わせている。

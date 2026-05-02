@@ -1,5 +1,5 @@
-title: local-llm-macmini
-description: Mac mini M4 Pro 64GB で Claude Code をローカル LLM で動かす検証
+title: Claude Code をローカル LLM で動かしたら騙されかけた話
+description: Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。「ベンチが速いほど怪しい」新しい失敗パターンの正体
 remote_theme: just-the-docs/just-the-docs
 
 url: https://j3tm0t0.github.io
