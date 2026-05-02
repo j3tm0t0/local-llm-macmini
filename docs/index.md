@@ -1,5 +1,5 @@
 ---
-title: Home
+title: "Claude Code、ローカル LLM でどこまで戦える？"
 layout: default
 nav_order: 1
 description: "Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。常用はやはり厳しいが、Claude が落ちている時の避難先としてなら成立する"
