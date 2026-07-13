@@ -2,31 +2,38 @@
 title: "Claude Code、ローカル LLM でどこまで戦える？"
 layout: default
 nav_order: 1
-description: "Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。常用はやはり厳しいが、Claude が落ちている時の避難先としてなら成立する"
+description: "MacBook Pro M5 Max 128GB / vllm-mlx 0.4.0 / ds4 DeepSeek V4 Flash まで揃えて Claude Code の T2-T5 を再計測。M4 Pro 世代の「クラウド比 4.2x 遅い」は覆り、常用可能ラインに乗った"
 permalink: /
 ---
 
 # Claude Code、ローカル LLM でどこまで戦える？
 {: .fs-9 }
 
-Mac mini M4 Pro 64GB で Ollama / MLX / Anthropic クラウドを T2-T5 同条件で徹底比較。<br>
-**結論: クラウド比 4〜13 倍遅い。常用は厳しいが、Claude が落ちている時の避難先としては成立する。**
+MacBook Pro **M5 Max / 128GB** で Ollama / MLX / ds4 (DeepSeek V4 Flash) / Anthropic クラウドを T2-T5 同条件で徹底再計測。<br>
+**結論: ローカル最良 (111s) は Opus 4.8 (106s) と 5% 差。もう「クラウドに追いつけない」時代ではない。**
 {: .fs-5 .fw-300 }
 
 ---
 
 ## やったこと
 
-Mac mini M4 Pro (M4 Pro / 64GB / macOS 25.4) に **Claude Code v2.1.126** を入れて、Anthropic クラウドではなくローカル LLM 経由で動かしたらどこまで戦えるかを試した。バックエンドは Ollama 0.22.1 (Anthropic Messages API ネイティブ互換あり) と MLX 系 2 種 (vllm-mlx 0.2.9 / robustonian-mlx-lm)。**比較対象は同じマシンで Anthropic クラウド版 (Opus 4.7 / Sonnet 4.6) も同じ tmux 駆動で計測**。
+MacBook Pro M5 Max (M5 Max / **128GB** / macOS 26.5.2) に **Claude Code v2.1.207** を入れて、Anthropic クラウドではなくローカル LLM 経由で動かした場合の速度・成功率を横断計測。バックエンドは 4 系統:
 
-T2-T5 は全部同じプロンプト、ファイル fixture も同じ:
+- **Ollama** (0.31.2, Anthropic Messages API ネイティブ互換)
+- **MLX** (vllm-mlx 0.4.0)
+- **ds4 / DwarfStar** (antirez の DeepSeek V4 Flash 専用 Metal エンジン)
+- **Anthropic クラウド** (Fable 5 / Opus 4.8 / Sonnet 5)
+
+**参考: M4 Pro / 64GB 世代のデータは [details.md の「M4 Pro 参考」セクション](details.md#m4-pro--64gb-世代-参考-2026-05) にそのまま残してあります**。今回の M5 Max は別のハード + 別のモデル世代 + 別の Claude Code バージョンなので、書き換えではなく「もう 1 つのスナップショット」として並置しています。
+
+タスクは前回と同一の T2-T5、fixture も同一:
 
 - **T2** バグ修正 (`factorial(0)` → `1` に直して実行)
 - **T3** マルチファイル package 作成 (`calc/__init__.py` + `calc/ops.py` + `test_calc.py`)
 - **T4** リファクタ (3 関数の重複除去 + 動作同一性確認)
 - **T5** CLI ツール作成 (`wc_tool.py` + 存在しないファイルへのエラーハンドリング)
 
-11 構成 (cloud 2 + Ollama 4 + MLX 5) を同じセッションで走らせて累計時間と artifact を比較。
+14 構成 (cloud 3 + Ollama 8 + MLX 2 + ds4 1) を同じセッションで走らせ、累計時間と `ls` による artifact 検証結果を並べました。
 
 ![モデル比較チャート](assets/model-comparison.png)
 
@@ -34,44 +41,40 @@ T2-T5 は全部同じプロンプト、ファイル fixture も同じ:
 
 ## 3 つの発見
 
-### 1. クラウド比 4〜13 倍遅い
+### 1. cloud と local の団子ができた
 
-Sonnet 4.6 が **80s** で T2-T5 を片付けるテストが、ローカル最良 (Ollama nvfp4) で **333s**、MLX 最良 (Qwen3.6-35B-A3B-UD-MLX-4bit) で **585s**。Apple Silicon ネイティブの MLX なら Ollama より速いはず、という素朴な期待は今回の vllm-mlx 0.2.9 構成では成立しなかった。
+M5 Max ローカル最良の **Ollama qwen3.6:35b-a3b-coding-nvfp4 (111s)** と、クラウド最良の **Opus 4.8 (106s)** の差は **5%**。ここに Sonnet 5 (112s) / Fable 5 (116s) / qwen3-coder-next:q4_K_M (117s) / MLX Qwen3.6-UD-4bit (121s) が挟まって、上位 6 モデルが **106〜121s の同じ団子**に収まった。
 
-### 2. tool 互換性は「サーバ × モデル × parser」の組み合わせで決まる
+M4 Pro 世代では cloud 80s に対しローカル最良が 333s (4.2x 遅い)、「速度で cloud に勝てる場面は無い」と書いていた。1 年経たずして、この結論は事実上ひっくり返った。要因は 3 つ同時に効いた: (a) M4 Pro → M5 Max のハード進化、(b) qwen3-coder-next / Qwen3.6-coding fine-tune 系の登場、(c) Claude Code 側の cache / tool 発火経路の熟成。
 
-同じ `Qwen3-Coder-30B-A3B-Instruct-4bit-DWQ` が **Ollama だと XML テキスト垂れ流しで全失敗、MLX (vllm-mlx の `qwen3_coder` parser 経由) だと正規発火で全成功** に逆転した。逆に `gpt-oss:20b` は **Ollama では完璧に動くのに MLX 系では tool block ゼロの完全空走**。モデル単体の性能だけ見て選ぶと事故る。
+### 2. 128GB は「単に載せられる」だけでなく「速く動く」ことを意味した
 
-### 3.「やる気だけモデル」が一番怖い
+M4 Pro (64GB) では **`gpt-oss:120b` が全 4 タスクで TIMEOUT**、**dense `qwen3.6:27b-coding-mxfp8` が DNF** だった 2 つの構成が、M5 Max ではそれぞれ **199s / 830s で全 PASS** に転じた。特に gpt-oss:120b は cloud Opus 4.8 の 1.9x で普通に使える範囲。
 
-`<function=Write>...` が画面に漏れる従来型の不一致は一目で気付くが、**`Let me read the file...` と宣言した直後 idle に戻り、自然文だけ綺麗に出力する** パターンは見落とす。Ollama の `qwen3:30b-instruct` と MLX の `gpt-oss-20b-MXFP4-Q4` で発生。何もしてないので速く見える (T2-T5 で 3m05s ! ) が artifact は 0/4。**ベンチ数字を信じる前に `ls` で生成ファイルを確認しないと騙される**。
+さらに 128GB でしか成立しないバックエンドとして **[antirez の ds4](https://github.com/antirez/ds4)** で **DeepSeek V4 Flash (~284B total / ~13B active) を q2 quant で 284s** で完走できた。frontier 級のモデルが Mac 1 台のローカルで、cloud Opus の 2.7x で動く。1 年前には Mac ローカルで走らせる選択肢すら存在しなかったモデルクラス。
 
----
+### 3. 新しい失敗モードも解禁された
 
-## おまけ: 冷却ファンを置いたら劇的に変わった
-
-Mac mini を **縦置きにして上に USB クーラーを載せて** active cooling を効かせて再走行したところ、**MLX vllm-mlx + Qwen3-Coder DWQ の T5 verbose loop (10 分タイムアウト) が消えて累計 22m36s → 13m12s (-42%)**。Ollama gpt-oss:20b も -15%、軽いモデルでも -7%。連続生成を続けるなら吸気/排気を補助してあげるだけでこんなに変わる。
-
-![Mac mini を縦置きにして上に USB クーラーを載せた状態](assets/macmini-with-cooler.jpg)
-
-ただし robustonian fork は VRAM 16→38GB 肥大化のメモリ圧で逆効果 (+5%) とか、短い T2 タスクで一貫して +15% (cooldown 入れすぎペナルティ?) とか、構成依存の挙動も観測。
-
-詳細データ → [冷却ファンセクション](details.md#冷却ファン投入で-thermal-throttling-を抑えるとどうなる)
+- **`batiai/minimax-m2.7:q3` (~88GB)** は 128GB 積んでもロード時 VRAM 122GB で残 6GB、ollama backend の llama-server が生成中に `500 Compute error` を吐いて 4/4 タスク FAIL。**「上限モデル」現象は 128GB でもまだ存在する**。
+- **`devstral-small-2`** は Mistral が "agentic 目的" と謳ったが、Claude Code 経由では T2/T3 で `<function=Read>` などを宣言だけして手を動かさない — **やる気だけ現象** が世代交代しても継承された。「新しくて評判が良い」だけでは信じられない、`ls` で artifact 検証は今後も必須。
+- **`qwen3.6:35b-a3b-coding-nvfp4` の T5** は初回で `<ToolSearch>` XML を垂れ流して 422s 空回り、再ランでは 22s で正常発火。**間欠発生する tool-format 漏れ**は M4 Pro 時代 (T4 verbose loop 揺らぎ) と同じで、1 ran 計測は依然として順位付けの材料にはならない。
 
 ---
 
 ## 結論
 
-ローカル LLM が **速度で Anthropic クラウドに勝つ場面は無い**。「Mac mini で Claude Code 体験を高速化したい」だけなら素直にクラウド版を使うのが合理的。
+M4 Pro 時代の結論「クラウド版を使うのが合理的、ローカルは Anthropic 落ちた時の避難先」から、M5 Max 世代では **「クラウドとローカルは互角、選択理由はコスト構造とプライバシー」** に軸が移った。
 
-それでもローカルを置く理由があるとすれば「機密データ / オフライン要件 / API 課金回避 / **Anthropic が落ちている時の避難先 (フォールバック保険)**」のいずれか。`local-claude` エイリアスを忍ばせて、いざ障害が来たとき切替えで作業を止めない、くらいの位置付けが現実的。
+日常的なコーディング agent 用途で 5% 差なら、月額 API 費用の見合い / オフライン要件 / 機密データ 取扱いのどれか 1 つがあれば十分にローカル運用は正当化できる。Anthropic 障害時の保険という消極的位置付けから、**通常運用の第一候補にも入り得る** レベルまで来た。
+
+一方で、失敗モードは 128GB 世代でも消えていない (`minimax`, `devstral-small-2`, `nvfp4` の間欠 XML 漏れ)。「動く」と「安定して動く」の間はまだ埋まっていないので、`ls` による artifact 検証と、重要な選択は 3 ran 揺らぎ確認、という前世代からの教訓はそのまま生きている。
 
 ---
 
 ## もっと詳しく
 
-- 📊 [**詳細データ・推奨モデル・運用 Tips**](details.md) — 全 11 構成の比較表、用途別推奨、クイックスタート (Ollama / MLX / robustonian)、共通エイリアス、4 つの教訓、冷却検証の詳細、クラウド版 (Opus 4.7 / Sonnet 4.6) のタスク別タイミング
-- 🔧 [**GitHub リポジトリ**](https://github.com/j3tm0t0/local-llm-macmini) — スクリプト、テスト fixture、計測ログ、チャート生成コード
+- 📊 [**詳細データ・全ランキング・失敗モード・運用 Tips**](details.md) — 14 構成の完全比較表、ds4 / vllm-mlx セットアップ、クラウド 3 モデルのタスク別タイミング、M4 Pro との対比表、M4 Pro 世代の参考データ、4 つの教訓 + M5 Max 世代で追加された 2 つの教訓
+- 🔧 [**GitHub リポジトリ**](https://github.com/j3tm0t0/local-llm-macmini) — スクリプト (`run_m5max.sh` / `run_ds4_bench.sh` / `run_mlx_bench.sh` / `run_cloud.sh`)、テスト fixture、計測ログ、チャート生成コード
 
 ---
 
