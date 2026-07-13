@@ -1,10 +1,13 @@
 #!/bin/bash
 #
-# 実践ベンチマーク: 3モデル比較 (T2〜T5)
+# 実践ベンチマーク: 6モデル比較 (T2〜T5)
 # 別ターミナルから実行:
 #   bash /Users/moto/tmp/claude-code-local-llm/run_all_practical.sh
 #
-# 所要時間目安: 20〜40分 (3モデル × 4テスト)
+# 所要時間目安: 2〜4時間 (6モデル × 4テスト)
+# モデル選定: uvx whichllm@latest 上位5位 + gemma4:31b (2026-06-17)
+#
+# 環境: Mac mini M4 Pro 64GB / Ollama 0.30.9 / Claude Code v2.1.126
 
 set -uo pipefail
 
@@ -14,11 +17,16 @@ export ANTHROPIC_BASE_URL=http://localhost:11434
 
 WORKDIR=/Users/moto/tmp/claude-code-local-llm
 RESULTS="$WORKDIR/results"
+COOLDOWN="${COOLDOWN:-30}"
 mkdir -p "$RESULTS"
+cd "$WORKDIR"
 
 MODELS=(
-    "qwen3.6:35b-a3b-coding-nvfp4"
-    "qwen3.6:35b-a3b-coding-mxfp8"
+    "qwen3-next:80b"
+    "qwen3.6:27b"
+    "qwen3:30b"
+    "gemma4:26b"
+    "gemma4:31b"
     "gpt-oss:20b"
 )
 
@@ -55,19 +63,26 @@ clean_workdir() {
 }
 
 echo "============================================"
-echo "  実践ベンチマーク 3モデル比較"
+echo "  実践ベンチマーク 6モデル比較"
 echo "  $(date)"
+echo "  COOLDOWN=${COOLDOWN}s between tests"
 echo "============================================"
 echo ""
 
+MODEL_NUM=0
 for MODEL in "${MODELS[@]}"; do
+    MODEL_NUM=$((MODEL_NUM + 1))
     MODEL_SLUG=$(echo "$MODEL" | tr ':/' '__')
     MODEL_DIR="$RESULTS/$MODEL_SLUG"
     mkdir -p "$MODEL_DIR"
 
     echo "========================================"
-    echo "MODEL: $MODEL"
+    echo "MODEL [$MODEL_NUM/${#MODELS[@]}]: $MODEL"
     echo "========================================"
+
+    # モデルを pull (未ダウンロードなら取得、取得済みなら即完了)
+    echo "  Pulling model..."
+    ollama pull "$MODEL"
 
     # モデルを事前ウォームアップ (最初のリクエストのロード時間を除外)
     echo "  Warming up model..."
@@ -106,8 +121,38 @@ for MODEL in "${MODELS[@]}"; do
         END=$(date +%s)
         ELAPSED=$((END - START))
 
-        echo "  $TEST_ID: ${STATUS} (${ELAPSED}s)"
-        echo "${TEST_ID}:${ELAPSED}s:${STATUS}" >> "$MODEL_DIR/times.txt"
+        # 成果物検証 ("やる気だけ" 検出)
+        VERIFY="-"
+        case "$TEST_ID" in
+            T2)
+                if head -3 "$WORKDIR/tests/T2_buggy.py" 2>/dev/null | grep -q "return 1"; then
+                    VERIFY="PASS"
+                else
+                    VERIFY="FAIL"
+                fi ;;
+            T3)
+                if [ -f "$WORKDIR/calc/__init__.py" ] && [ -f "$WORKDIR/calc/ops.py" ] && [ -f "$WORKDIR/test_calc.py" ]; then
+                    VERIFY="PASS"
+                else
+                    VERIFY="FAIL"
+                fi ;;
+            T4) VERIFY="SKIP" ;;
+            T5)
+                if [ -f "$WORKDIR/wc_tool.py" ]; then
+                    VERIFY="PASS"
+                else
+                    VERIFY="FAIL"
+                fi ;;
+        esac
+
+        echo "  $TEST_ID: ${STATUS} (${ELAPSED}s) [verify: ${VERIFY}]"
+        echo "${TEST_ID}:${ELAPSED}s:${STATUS}:${VERIFY}" >> "$MODEL_DIR/times.txt"
+
+        # 熱対策: テスト間クールダウン
+        if [ "$COOLDOWN" -gt 0 ]; then
+            echo "  Cooling down ${COOLDOWN}s..."
+            sleep "$COOLDOWN"
+        fi
     done
 
     # モデルアンロード
@@ -115,7 +160,7 @@ for MODEL in "${MODELS[@]}"; do
     echo "  Unloading $MODEL..."
     curl -s -X POST http://localhost:11434/api/generate \
         -d "{\"model\":\"$MODEL\",\"keep_alive\":0}" > /dev/null 2>&1
-    sleep 3
+    sleep 5
     echo ""
 done
 
@@ -132,4 +177,3 @@ for MODEL in "${MODELS[@]}"; do
 done
 echo ""
 echo "結果は $RESULTS/ に保存されています。"
-echo "Claude Code セッションに戻ってレポートを生成してください。"
