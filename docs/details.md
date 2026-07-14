@@ -3,7 +3,7 @@ title: 詳細データ・失敗モード・運用 Tips
 layout: default
 nav_order: 2
 permalink: /details/
-description: "M5 Max 128GB 版の完全比較表、cloud 3 モデルのタスク別タイミング、ds4/vllm-mlx セットアップ、6 つの教訓、M4 Pro 世代の参考データ + 冷却検証"
+description: "M5 Max 128GB 版の完全比較表、cloud 3 モデルのタスク別タイミング、ds4/vllm-mlx セットアップ、7 つの教訓、Macs Fan Control 検証、M4 Pro 世代の参考データ + 冷却検証"
 ---
 
 # 詳細データ・失敗モード・運用 Tips
@@ -233,7 +233,7 @@ claude --print --model claude-opus-4-8 --permission-mode bypassPermissions "<pro
 
 ---
 
-## 検証で得た 6 つの教訓
+## 検証で得た 7 つの教訓
 
 **M4 Pro 時代から継続 (今も有効):**
 
@@ -242,10 +242,11 @@ claude --print --model claude-opus-4-8 --permission-mode bypassPermissions "<pro
 3. **「やる気だけモデル」は最も危険な失敗モード**。M5 Max 世代でも `devstral-small-2` で再現。「新しくて評判が良い」だけでは信じられない。**`ls` で artifact を必ず確認**。
 4. **1 ran 計測は順位を決められない**。T4 で verbose loop、T5 で XML 漏れなど、確率的に爆発するタスクがある。重要な選択 (推奨モデル切替) は最低 3 ran。
 
-**M5 Max 128GB 世代で追加された 2 つ:**
+**M5 Max 128GB 世代で追加された 3 つ:**
 
 5. **「上限モデル」は 128GB でも消えない、上限の位置が変わるだけ**。M4 Pro での gpt-oss:120b (全 TIMEOUT) が M5 Max では 199s で完走した一方、`batiai/minimax-m2.7:q3` (88GB) が 128GB でロード時 122GB を要求して同じパターンで全 4/4 fail。**モデルサイズと利用可能 RAM の余裕を見た「上限手前」判断は継続して必要**。
 6. **Community/registry のタグは volatile**。`qwen3-coder-next:80b` は 2 ヶ月で消失、quant 命名 (`:q4_K_M` 等) に変更された。benchmark 継続には runner に「pull 失敗 → SKIP して次モデル」ガードが必須。
+7. **MacBook Pro は Macs Fan Control で fans MAX ピン留めが必須**。内蔵ファンの auto RPM は静音優先で sustained LLM 負荷を捌ききれず、同じモデルの累計時間が **20-45x** に膨張する。fan MAX にすると thermal_pressure=Nominal 100% で verbose loop も消える。**M4 Pro Mac mini は「外部 USB ファン後付け」で十分だったが、MacBook Pro は「内蔵ファン制御を上書き」が本質**。詳細は上の[Macs Fan Control セクション](#macbook-pro-m5-max-macs-fan-control-で-fans-max-にしないと本気の性能出ない)。
 
 ---
 
@@ -296,6 +297,69 @@ claude --print --model claude-opus-4-8 --permission-mode bypassPermissions "<pro
 | Ollama qwen3.6:27b-coding-mxfp8 (dense) | DNF | 830s | (M5 Max 解禁) |
 
 **平均 -60〜80% 短縮**。上限モデル (120b, dense 27B) が「走らない → 走る」に転じたケースを除いても、既存モデルは 3 倍前後の高速化。
+
+---
+
+## MacBook Pro M5 Max: Macs Fan Control で fans MAX にしないと本気の性能出ない
+
+MacBook Pro M5 Max で LLM を継続走行するとき、**内蔵ファンの自動 RPM 制御 (静音優先) では sustained 負荷を捌ききれない**。手動で fan RPM を MAX にピン留めしないと thermal_pressure に Heavy が入り、T4/T5 で確率的 verbose loop が発生して累計時間が **20-45x** に膨張することを実測で確認した。
+
+![M5 Max Macs Fan Control ありなしでの累計時間](assets/cooling-impact-m5max.png)
+
+> 図: 4 モデル × 3 条件 (log scale)。① baseline (cool room, fan 未意識) → ② fan on (auto RPM、静音優先) → ③ fan MAX (Macs Fan Control で fans を 100% 固定)。thermal_pressure は `sudo powermetrics --samplers thermal` で並行実測。
+
+### 3 条件の累計時間 (M5 Max, T2-T5)
+
+| モデル | ① baseline | ② fan on (auto) | ③ fan MAX |
+|---|---|---|---|
+| Ollama qwen3.6:35b-a3b-coding-nvfp4 | 111s | **4054s** (T4 TIMEOUT) | **140s** ✅ |
+| Ollama gpt-oss:120b | 199s | **1455s** (T5 verbose) | **240s** ✅ |
+| MLX unsloth/Qwen3.6-35B-A3B-UD-MLX-4bit | 121s | **2615s** (T2,T3 verbose) | **116s** ✅ (baseline 超え) |
+| MLX Qwen3-Coder-30B-A3B-DWQ | 451s | **2381s** (T4 verbose) | **142s** ✅ (baseline を大幅更新) |
+
+### 並行取得した thermal_pressure
+
+| モデル | ② fan on の Heavy 比率 | ③ fan MAX の Heavy 比率 |
+|---|---|---|
+| Ollama nvfp4 | 6% | **0% (Nominal 100%)** |
+| Ollama gpt-oss:120b | 10% | **0% (Nominal 100%)** |
+| MLX Qwen3.6-UD-4bit | 20% | **0% (Nominal 100%)** |
+| MLX Qwen3-Coder-DWQ | 25% | **0% (Nominal 100%)** |
+
+### 3 つの発見
+
+**1. Fan-auto は事実上「効いてない」**
+MacBook Pro の thermal 制御は静音優先で、外部から fan が回ってるように見えても Heavy が 6-25% 出る。特に **MLX 系は Ollama より thermal 圧が 2-4 倍高い** (server の GPU 使い方が継続的で発熱大)。fan-auto では sustained LLM 負荷に対応しきれない。
+
+**2. Fan MAX で M5 Max が本領発揮**
+Macs Fan Control で fans を 100% ピン留めするだけで、4 モデル全てで thermal_pressure が Nominal 100% (throttling ゼロ) になり、verbose loop 完全消失。特に MLX Qwen3-Coder-DWQ は **451s → 142s (-69%)** と、M4 Pro の外部ファンで叩き出した -42% を大きく上回る改善。
+
+**3. Verbose loop の主犯は thermal と相関**
+これまで T4/T5 の verbose loop (2000s+ の spike) は「モデル固有の確率的失敗」と扱ってきたが、今回 thermal_pressure と並行取得したことで **Nominal 100% だと spike ゼロ、Heavy が入ると確率的に大爆発**の綺麗な相関が確認された。fan MAX にするだけで発生率が実測ゼロに落ちる。
+
+### 運用 Tips
+
+```bash
+# 1. Macs Fan Control 導入
+brew install --cask macs-fan-control
+
+# 2. Preferences → Fans タブで各 fan を Custom → Constant RPM → 最大値 (5500-6000 rpm)
+# 3. LLM 常用中はこの設定を維持、通常運用に戻すときは Auto に
+
+# 4. thermal 実測ログを取りたいなら (NOPASSWD sudo 前提)
+echo "moto ALL=(ALL) NOPASSWD: /usr/bin/powermetrics" | sudo tee /etc/sudoers.d/powermetrics
+sudo chmod 440 /etc/sudoers.d/powermetrics
+
+./scripts/run_with_thermal.sh /tmp/mybench \
+    bash ./run_m5max.sh qwen3.6:35b-a3b-coding-nvfp4
+# → /tmp/mybench.summary に thermal_pressure 分布 + CPU/GPU 電力
+```
+
+`.summary` に `thermal_pressure   Nominal=100%` が出れば fan 制御が効いてる、`Heavy=` が入るならもっと冷却が必要。
+
+### 補足: Cloud との比較の再解釈
+
+冒頭のランキング (Opus 4.8 = 106s, Ollama nvfp4 = 111s, cloud比 1.05x) は **fan MAX 環境での baseline** に近い値だが、fan-auto のままだと 4054s = cloud比 38x で「使い物にならない」水準まで落ちる。**「MacBook Pro で local LLM ≒ cloud」の主張には、Macs Fan Control 設定が implicit な前提**として付いてる、と正確に読むべき。
 
 ---
 

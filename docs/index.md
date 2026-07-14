@@ -61,6 +61,19 @@ M4 Pro (64GB) では **`gpt-oss:120b` が全 4 タスクで TIMEOUT**、**dense 
 
 ---
 
+## ⚠️ 重要な前提: Macs Fan Control で fans MAX ピン留め必須
+
+上の数字は **すべて MacBook Pro の内蔵ファンを Macs Fan Control で 100% RPM に固定した状態**での実測。**デフォルトの auto RPM (静音優先) のままだと sustained LLM 負荷を捌ききれず、同じモデルの累計時間が 20-45 倍に膨張する** ことを別途検証した。
+
+| モデル | fan-auto (デフォルト) | fan MAX |
+|---|---|---|
+| Ollama nvfp4 | **4054s** (T4 TIMEOUT) | **140s** |
+| MLX Qwen3-Coder-DWQ | **2381s** (T4 verbose) | **142s** |
+
+thermal_pressure を並行実測すると fan-auto では Heavy 6-25% (throttling あり)、fan MAX では Nominal 100% (throttling ゼロ)。ラップトップは静音チューニングと sustained AI 負荷が両立しないので、常用するなら Macs Fan Control 必須。詳細は [詳細ページの Macs Fan Control セクション](details.md#macbook-pro-m5-max-macs-fan-control-で-fans-max-にしないと本気の性能出ない)。
+
+---
+
 ## 結論
 
 M4 Pro 時代の結論「クラウド版を使うのが合理的、ローカルは Anthropic 落ちた時の避難先」から、M5 Max 世代では **「クラウドとローカルは互角、選択理由はコスト構造とプライバシー」** に軸が移った。

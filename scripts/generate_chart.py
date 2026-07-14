@@ -201,3 +201,82 @@ OUT2 = Path(__file__).resolve().parent.parent / "docs" / "assets" / "cooling-imp
 plt.savefig(OUT2, dpi=180, bbox_inches="tight")
 plt.close(fig2)
 print(f"Wrote {OUT2.relative_to(Path(__file__).resolve().parent.parent)}")
+
+
+# ============================================================
+# Third chart: M5 Max 3-condition cooling (baseline / fan auto / fan max)
+# 2026-07 検証: MacBook Pro M5 Max では Macs Fan Control で fan RPM を
+# 手動で MAX にしないと sustained LLM で thermal_pressure=Heavy が入り
+# T4/T5 で確率的 verbose loop が発生して 20-45x に膨張する。
+# fan MAX にすると thermal_pressure=Nominal 100% で spike 消失。
+# ============================================================
+
+@dataclass
+class CoolingTriple:
+    label: str
+    baseline: int   # 初回計測 (fan未意識、cool room だった時に取れた best case)
+    fan_on: int     # fan on だが auto RPM (静音優先) → 実質効いてない
+    fan_max: int    # Macs Fan Control で fans を 100% にピン留め
+    baseline_note: str = ""
+    fan_on_note: str = ""
+    fan_max_note: str = ""
+
+# Data: results/{ollama,mlx}/times.txt + results_cooling/cool_0714_1202/,
+# results_cooling/fanmax_0715_0019/ の cumulative T2-T5 秒数
+COOLING_M5MAX: list[CoolingTriple] = [
+    CoolingTriple("Ollama qwen3.6:35b-a3b-coding-nvfp4",
+                  111, 4054, 140,
+                  "Nominal (未計測)", "Heavy 6% / T4 TIMEOUT", "Nominal 100%"),
+    CoolingTriple("Ollama gpt-oss:120b",
+                  199, 1455, 240,
+                  "Nominal (未計測)", "Heavy 10% / T5 verbose", "Nominal 100%"),
+    CoolingTriple("MLX unsloth/Qwen3.6-35B-A3B-UD-MLX-4bit",
+                  121, 2615, 116,
+                  "Nominal (未計測)", "Heavy 20% / T2,T3 verbose", "Nominal 100%"),
+    CoolingTriple("MLX Qwen3-Coder-30B-A3B-DWQ",
+                  451, 2381, 142,
+                  "Nominal (未計測)", "Heavy 25% / T4 verbose", "Nominal 100%"),
+]
+
+fig3, ax3 = plt.subplots(figsize=(12, 6))
+n3 = len(COOLING_M5MAX)
+y3 = list(range(n3))[::-1]
+bh = 0.26
+
+base_vals   = [p.baseline for p in COOLING_M5MAX]
+fanon_vals  = [p.fan_on   for p in COOLING_M5MAX]
+fanmax_vals = [p.fan_max  for p in COOLING_M5MAX]
+
+ax3.barh([yi + bh for yi in y3], base_vals, height=bh,
+         color="#94a3b8", edgecolor="black", linewidth=0.4, label="① baseline (cool room, fan 未意識)")
+ax3.barh(y3, fanon_vals, height=bh,
+         color="#f472b6", edgecolor="black", linewidth=0.4, label="② fan on (auto RPM = 静音優先)")
+ax3.barh([yi - bh for yi in y3], fanmax_vals, height=bh,
+         color="#22d3ee", edgecolor="black", linewidth=0.4, label="③ fan MAX (Macs Fan Control で 100%)")
+
+ax3.set_yticks(y3)
+ax3.set_yticklabels([p.label for p in COOLING_M5MAX], fontsize=9)
+ax3.set_xlabel("T2-T5 累計時間 (秒) — 短いほど良い / log scale")
+ax3.set_xscale("log")
+ax3.set_title("MacBook Pro M5 Max: Macs Fan Control 有無による thermal throttling 影響",
+              fontsize=12, pad=15)
+
+for yi, p in zip(y3, COOLING_M5MAX):
+    ax3.text(p.baseline * 1.05, yi + bh, f"{p.baseline}s ({p.baseline_note})",
+             va="center", fontsize=8, color="#555")
+    ax3.text(p.fan_on * 1.05, yi, f"{p.fan_on}s ({p.fan_on_note})",
+             va="center", fontsize=8, color="#c026d3")
+    ax3.text(p.fan_max * 1.05, yi - bh, f"{p.fan_max}s ({p.fan_max_note})",
+             va="center", fontsize=8, color="#0891b2")
+
+ax3.set_xlim(80, max(fanon_vals) * 3)
+ax3.grid(axis="x", linestyle=":", alpha=0.4, which="both")
+ax3.spines["top"].set_visible(False)
+ax3.spines["right"].set_visible(False)
+ax3.legend(loc="lower right", fontsize=9, framealpha=0.95)
+
+plt.tight_layout()
+OUT3 = Path(__file__).resolve().parent.parent / "docs" / "assets" / "cooling-impact-m5max.png"
+plt.savefig(OUT3, dpi=180, bbox_inches="tight")
+plt.close(fig3)
+print(f"Wrote {OUT3.relative_to(Path(__file__).resolve().parent.parent)}")
