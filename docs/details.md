@@ -337,6 +337,33 @@ Macs Fan Control で fans を 100% ピン留めするだけで、4 モデル全�
 **3. Verbose loop の主犯は thermal と相関**
 これまで T4/T5 の verbose loop (2000s+ の spike) は「モデル固有の確率的失敗」と扱ってきたが、今回 thermal_pressure と並行取得したことで **Nominal 100% だと spike ゼロ、Heavy が入ると確率的に大爆発**の綺麗な相関が確認された。fan MAX にするだけで発生率が実測ゼロに落ちる。
 
+### 追加検証: 外付けファンは MLX 連続長時間で意味を持つ
+
+上の 3 発見は「Macs Fan Control fan MAX **+ 外付け USB ファン**」構成での結果。じゃあ外付けファンなしで内蔵 MAX だけならどこまで戦えるか、を切り分けたのが以下 (設置場所も見直した状態で計測):
+
+| セットアップ | UD-4bit 累計 | DWQ 累計 | DWQ の T4 | DWQ 連続 thermal_pressure |
+|---|---|---|---|---|
+| Fan auto (静音優先) + 外付け USB fan | 2615s (verbose loop) | 2381s (verbose loop) | 2120s | Heavy 25% |
+| **Fan MAX + 良い設置 (外付けなし)** | **161s** | **486s** | **394s (mild loop)** | **Heavy 34%** |
+| **Fan MAX + 外付け USB fan** | **116s** ✅ | **142s** ✅ | **46s** ✅ | **Nominal 100%** |
+
+数字を追うと明確に分岐する:
+
+- **UD-4bit (~3 分の bench)** は Fan-MAX + 良設置だけで 161s に収まる。**短時間タスクなら外付けは不要**
+- **DWQ (10-16 分の sustained)** で **Heavy 34% が蓄積**、DWQ の T4 が 46s → 394s の verbose loop 半分再発。**sustained MLX ヘビーワークは外付けファンでの追い打ちで真価**
+- Ollama モデルは今回計測してないが、round 2 の pattern から **MLX より thermal 圧が 1/2〜1/4** なので、Ollama sustained は Fan MAX のみで概ね捌ける想定
+
+**推奨マトリクス:**
+
+| ユースケース | セットアップ推奨 |
+|---|---|
+| casual chat / 単発 bench (< 5分) | Fan MAX のみで十分 |
+| 通常のコーディング agent 運用 (Ollama, 断続的) | Fan MAX + 良い設置 |
+| **sustained MLX ヘビー (連続 10 分+)** | **Fan MAX + 外付け USB ファン (排気口方向)** |
+| 気にせず全部完璧に走らせたい | 全部盛り (Fan MAX + 外付け + 良設置) |
+
+**「体感で筐体が熱い」 ≠ 「chip throttling」**: sustained 時、内蔵 fan MAX で thermal_pressure が Nominal の間でも、chassis (アルミ) は明らかに熱くなる。これは heat が SoC → 筐体経由で正しく逃げてる証拠で心配ない。thermal_pressure が Heavy に落ちると初めて chip 側で throttling が発生する。
+
 ### 運用 Tips
 
 ```bash
