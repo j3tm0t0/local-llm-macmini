@@ -1,0 +1,51 @@
+#!/bin/bash
+# fan — Macs Fan Control の "自動" / "フル回転" 切替 CLI
+# 前提: Macs Fan Control が /Applications/ にインストール済み
+# 内部動作: defaults write でプリセット差し替え → MFC 再起動で反映
+#
+# Usage:
+#   fan max      # フル回転 (Predefined:1)  ← LLM sustained 走行前
+#   fan auto     # 自動 (Predefined:0)      ← bench 終わったら戻す
+#   fan status   # 現在の設定を表示
+#   fan          # このヘルプ
+
+set -uo pipefail
+
+DOMAIN=com.crystalidea.macsfancontrol
+MFC_APP="Macs Fan Control"
+
+apply_preset() {
+    local preset="$1"
+    defaults write "$DOMAIN" ActivePreset "$preset"
+    killall "$MFC_APP" 2>/dev/null
+    open -a "$MFC_APP"
+}
+
+case "${1:-}" in
+    max)
+        apply_preset "Predefined:1"
+        echo "🌀 fan: フル回転 (Predefined:1)"
+        ;;
+    auto)
+        apply_preset "Predefined:0"
+        echo "🪶 fan: 自動 (Predefined:0)"
+        ;;
+    status)
+        cur=$(defaults read "$DOMAIN" ActivePreset 2>/dev/null || echo "unset")
+        case "$cur" in
+            "Predefined:0") label="自動" ;;
+            "Predefined:1") label="フル回転" ;;
+            *) label="unknown" ;;
+        esac
+        echo "preset: $cur ($label)"
+        pgrep -fl "Macs Fan Control" >/dev/null && echo "MFC: running" || echo "MFC: not running"
+        ;;
+    ""|-h|--help|help)
+        sed -n '2,10p' "$0" | sed 's|^# \?||'
+        ;;
+    *)
+        echo "unknown subcommand: $1" >&2
+        echo "usage: fan {max|auto|status}" >&2
+        exit 1
+        ;;
+esac

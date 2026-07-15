@@ -370,8 +370,8 @@ Macs Fan Control で fans を 100% ピン留めするだけで、4 モデル全�
 # 1. Macs Fan Control 導入
 brew install --cask macs-fan-control
 
-# 2. Preferences → Fans タブで各 fan を Custom → Constant RPM → 最大値 (5500-6000 rpm)
-# 3. LLM 常用中はこの設定を維持、通常運用に戻すときは Auto に
+# 2. GUI で "フル回転" プリセットを 1 度選択して有効化 (無料版でも自動 / フル回転の 2 択あり)
+# 3. LLM 常用時はフル回転、通常運用に戻すときは自動へ
 
 # 4. thermal 実測ログを取りたいなら (NOPASSWD sudo 前提)
 echo "moto ALL=(ALL) NOPASSWD: /usr/bin/powermetrics" | sudo tee /etc/sudoers.d/powermetrics
@@ -383,6 +383,18 @@ sudo chmod 440 /etc/sudoers.d/powermetrics
 ```
 
 `.summary` に `thermal_pressure   Nominal=100%` が出れば fan 制御が効いてる、`Heavy=` が入るならもっと冷却が必要。
+
+### CLI で自動/フル回転を切り替える
+
+Macs Fan Control 無料版は custom preset (有料機能) が作れないが、内蔵の "自動" / "フル回転" プリセットなら `defaults write` + MFC 再起動で CLI 切り替え可能。[`scripts/fan`](https://github.com/j3tm0t0/local-llm-macmini/blob/main/scripts/fan) を `~/.local/bin/` に置くと以下が使える:
+
+```bash
+fan max      # フル回転 (Predefined:1) — bench 走行前
+fan auto     # 自動 (Predefined:0) — 通常運用に戻す
+fan status   # 現在の preset と MFC 起動状態
+```
+
+内部動作: `defaults write com.crystalidea.macsfancontrol ActivePreset "Predefined:1"` して MFC を `killall` + `open -a` で再起動。有料版の custom preset まで使えるならもっと細かい RPM 指定も同じ仕組みで可能 (ActivePreset を `"Custom:0"` などにする)。
 
 ### 補足: Cloud との比較の再解釈
 
