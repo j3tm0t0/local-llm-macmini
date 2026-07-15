@@ -1,7 +1,7 @@
 #!/bin/bash
 # fan — Macs Fan Control の "自動" / "フル回転" 切替 CLI
 # 前提: Macs Fan Control が /Applications/ にインストール済み
-# 内部動作: defaults write でプリセット差し替え → MFC 再起動で反映
+# 内部動作: defaults write でプリセット差し替え → osascript で MFC 再起動 (SSH からも動く)
 #
 # Usage:
 #   fan max      # フル回転 (Predefined:1)  ← LLM sustained 走行前
@@ -16,9 +16,13 @@ MFC_APP="Macs Fan Control"
 
 apply_preset() {
     local preset="$1"
+    # 順序が肝心: MFC は quit 時に in-memory state を plist に書き戻すので、
+    # 先に quit → その後 defaults write → 最後に launch でないと write が上書きされて戻る
+    # (killall+open ではなく osascript を使うのは SSH セッションで relaunch を確実にするため)
+    osascript -e "quit app \"$MFC_APP\"" 2>/dev/null || true
+    sleep 1
     defaults write "$DOMAIN" ActivePreset "$preset"
-    killall "$MFC_APP" 2>/dev/null
-    open -a "$MFC_APP"
+    osascript -e "tell application \"$MFC_APP\" to launch" 2>/dev/null || true
 }
 
 case "${1:-}" in

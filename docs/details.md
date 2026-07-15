@@ -334,8 +334,8 @@ MacBook Pro の thermal 制御は静音優先で、外部から fan が回って
 **2. Fan MAX で M5 Max が本領発揮**
 Macs Fan Control で fans を 100% ピン留めするだけで、4 モデル全てで thermal_pressure が Nominal 100% (throttling ゼロ) になり、verbose loop 完全消失。特に MLX Qwen3-Coder-DWQ は **451s → 142s (-69%)** と、M4 Pro の外部ファンで叩き出した -42% を大きく上回る改善。
 
-**3. Verbose loop の主犯は thermal と相関**
-これまで T4/T5 の verbose loop (2000s+ の spike) は「モデル固有の確率的失敗」と扱ってきたが、今回 thermal_pressure と並行取得したことで **Nominal 100% だと spike ゼロ、Heavy が入ると確率的に大爆発**の綺麗な相関が確認された。fan MAX にするだけで発生率が実測ゼロに落ちる。
+**3. Verbose loop は thermal と生成速度の両方に依存**
+これまで T4/T5 の verbose loop (2000s+ の spike) は「モデル固有の確率的失敗」と扱ってきたが、今回 thermal_pressure と並行取得したことで一定の相関が見えた。ただし **Nominal 100% でも Mac mini M4 Pro では T4 verbose loop 発生** (別途 [Mac mini セクション](#mac-mini-m4-pro-fan-max-検証-2026-07)) → fan MAX で spike 消失は M5 Max では起きるが、より遅い機では起きない可能性が高い。**thermal が発生率を押し上げる要因の一つではあるが、生成速度が遅い機では thermal ゼロでも loop に入る**ということ。M5 Max fan MAX で 4 モデル全て Nominal 100% + spike ゼロだったのは、確率的には「thermal によって上振れした発生率が実質ゼロまで落ちた」+「M5 Max の生成速度が速く loop 域に入る前にタスク完走」の合わせ技だった、と読み直した方が正確。
 
 ### 追加検証: 外付けファンは MLX 連続長時間で意味を持つ
 
@@ -394,11 +394,54 @@ fan auto     # 自動 (Predefined:0) — 通常運用に戻す
 fan status   # 現在の preset と MFC 起動状態
 ```
 
-内部動作: `defaults write com.crystalidea.macsfancontrol ActivePreset "Predefined:1"` して MFC を `killall` + `open -a` で再起動。有料版の custom preset まで使えるならもっと細かい RPM 指定も同じ仕組みで可能 (ActivePreset を `"Custom:0"` などにする)。
+内部動作: MFC を `osascript -e 'quit app "Macs Fan Control"'` で終了 → `defaults write com.crystalidea.macsfancontrol ActivePreset "Predefined:1"` → `osascript -e 'tell application "Macs Fan Control" to launch'` で再起動。有料版の custom preset まで使えるならもっと細かい RPM 指定も同じ仕組みで可能 (ActivePreset を `"Custom:0"` などにする)。
+
+**順序が肝**: MFC は quit 時に in-memory state を plist に書き戻すので、先に `defaults write` すると quit で上書きされて元に戻る (ハマった)。**先に quit → write → launch** が正解。また `killall` + `open -a` ではなく `osascript` を使うのは、SSH セッションから launch する場合に `open -a` が audit session 権限エラー (`Could not switch to audit session`) で失敗するケースを回避するため。両ホスト (M5 Max / mini M4 Pro) で同一スクリプトが動く。
 
 ### 補足: Cloud との比較の再解釈
 
 冒頭のランキング (Opus 4.8 = 106s, Ollama nvfp4 = 111s, cloud比 1.05x) は **fan MAX 環境での baseline** に近い値だが、fan-auto のままだと 4054s = cloud比 38x で「使い物にならない」水準まで落ちる。**「MacBook Pro で local LLM ≒ cloud」の主張には、Macs Fan Control 設定が implicit な前提**として付いてる、と正確に読むべき。
+
+---
+
+## Mac mini M4 Pro fan-max 検証 (2026-07)
+
+MacBook Pro M5 Max で "fan MAX で verbose loop 消失" を観測した後、**Mac mini M4 Pro でも同じことが起きるか**、**外付け USB ファンなしで内蔵ファン MAX だけで足りるか**、を検証した。
+
+**環境**: Mac16,11 (Mac mini M4 Pro / 14 cores / 64GB / macOS 26.5.1) / Ollama 0.30.9 / vllm-mlx 0.4.0 / Claude Code v2.1.207、外付け USB ファンなし、Macs Fan Control 内蔵ファン MAX ピン留め。
+
+### 結果 (2 モデル、内蔵 fan MAX のみ)
+
+| Model | T2 | T3 | T4 | T5 | 累計 | thermal_pressure | Combined power |
+|---|---|---|---|---|---|---|---|
+| Ollama qwen3.6:35b-a3b-coding-nvfp4 | 95 | 145 | **604 TIMEOUT** | 59 | **903s (15分)** | Nominal 100% (205 samples) | avg 28W / max 40W |
+| MLX Qwen3-Coder-30B-A3B-DWQ | 452 | 607 | **901 TIMEOUT** | 742 | **2702s (45分)** | Nominal 100% (566 samples) | avg 39W / max 47W |
+
+### 3 つの発見
+
+**1. Mac mini M4 Pro のデスクトップ筐体は thermal 面で優秀**
+MLX DWQ を 45 分 sustained したのに **thermal_pressure が Nominal 100% を維持**。MBP M5 Max が同じ DWQ で Heavy 25% 出したのと対照的。「デスクトップ筐体 + 単一大型ファン、机の上に置かれてる」構造的優位性がクリアに数字に出る。M4 Pro Mac mini + Macs Fan Control fan MAX は **外付け USB ファン不要** で thermal envelope 内に納まる。
+
+**2. Verbose loop は thermal ゼロでも発生する**
+両モデルで T4 が TIMEOUT (nvfp4=604s, DWQ=901s = 900s cap)、thermal_pressure Nominal 100% 全体を通して。つまり M5 Max fan MAX で spike 消失した現象は、**thermal 消失+ 生成速度の速さで loop 域に入る前にタスク完走** の合わせ技だった。**M4 Pro のような生成速度が遅い機では、thermal をゼロにしても verbose loop は残る**。
+
+**3. Mac mini M4 Pro の MLX が遅すぎる (要確認)**
+MLX DWQ が MBP M5 Max fan-max (142s) の **19x 遅い 2702s**。通常世代差 (M4→M5 で GPU 2-3x) では説明できない差。**Mac mini の vllm-mlx が古い版で MLX ライブラリ差** の可能性大 (未確認)。要 `vllm-mlx --version` と MLX の library version 確認。
+
+### 全体としてわかったこと (M4 Pro Mac mini vs M5 Max MBP)
+
+| 観点 | MacBook Pro M5 Max | Mac mini M4 Pro |
+|---|---|---|
+| Fan auto での thermal | Heavy 6-25% (T2-T5 中に throttling) | 未計測 (推定 Heavy 出るが M5 より軽そう) |
+| **Fan MAX 内蔵のみ (外付けなし)** | ⚠ MLX sustained で Heavy 34% (足りない) | ✅ **Nominal 100% 維持** (筐体優位) |
+| Fan MAX + 外付け USB ファン | ✅ 全モデル Nominal 100% | (未計測、多分不要) |
+| **Verbose loop 発生** | Fan MAX で消失 | **Fan MAX でも T4 で発生** (生成速度依存) |
+| 実行速度 (Ollama nvfp4) | 140s | 903s (6.5x 遅) |
+
+**結論**: 
+- **Mac mini M4 Pro は thermal は優等生**、Macs Fan Control fan MAX だけで sustained MLX も納まる (外付け不要)
+- ただし **絶対性能は遅く、verbose loop に落ちやすい** → 実用は Ollama Qwen 系に絞るのが現実的
+- MBP M5 Max は 5x 速いが thermal で妥協 (fan MAX + 場合により外付け必要)
 
 ---
 
